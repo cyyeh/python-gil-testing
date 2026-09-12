@@ -283,7 +283,7 @@
   {
    "name": "pandas_groupby",
    "category": "library",
-   "description": "8 tasks: build a 1M-row DataFrame and groupby-sum. pandas holds the GIL for most of its Cython/Python code.",
+   "description": "8 tasks: build a 1M-row DataFrame and groupby-sum. Most of the wall time is spent in C/Cython with the GIL released, so this scales on every build - the GIL is not the bottleneck here.",
    "requires": [
     "numpy",
     "pandas"

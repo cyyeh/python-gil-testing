@@ -77,8 +77,8 @@ def numpy_matmul(n_workers: int, tasks: int = 8, size: int = 512, reps: int = 8)
 
 
 def pandas_groupby(n_workers: int, tasks: int = 8, rows: int = 1_000_000) -> int:
-    """Build a DataFrame and run groupby-sum. pandas holds the GIL for most of
-    its Python-level and Cython code."""
+    """Build a DataFrame and run groupby-sum. Most of the wall time is spent in
+    C/Cython with the GIL released, so this scales on GIL builds too."""
     import numpy as np
     import pandas as pd
 
@@ -237,8 +237,9 @@ WORKLOADS: list[Workload] = [
              "8 tasks x 8 matmuls of 512x512 float64 (BLAS threads pinned to 1). numpy releases the "
              "GIL inside BLAS, so all builds should scale.", ("numpy",), warmup=True),
     Workload("pandas_groupby", "library", pandas_groupby,
-             "8 tasks: build a 1M-row DataFrame and groupby-sum. pandas holds the GIL for most "
-             "of its Cython/Python code.", ("numpy", "pandas"), warmup=True),
+             "8 tasks: build a 1M-row DataFrame and groupby-sum. Most of the wall time is spent in "
+             "C/Cython with the GIL released, so this scales on every build - the GIL is not the "
+             "bottleneck here.", ("numpy", "pandas"), warmup=True),
     Workload("duckdb_query", "library", duckdb_query,
              "8 tasks: SELECT sum(i*i) FROM range(5M) on a per-task connection with SET threads=1. "
              "DuckDB releases the GIL during execution. NOTE: importing duckdb re-enables the GIL "

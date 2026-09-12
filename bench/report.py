@@ -652,7 +652,10 @@ builds in 3.13/3.14, so every extension needs a dedicated build.</li>
 "thread-safe": the library still has to protect its own global state.</li>
 <li>Extensions that already released the GIL around long C loops (numpy's BLAS calls, DuckDB's query engine, scikit-learn's
 Cython <code>nogil</code> blocks) scaled across threads <em>before</em> free-threading; the gain from 3.14t is for code that
-holds the GIL - Python-level dispatch, small-array ops, pandas' Cython paths, and ordinary Python code.</li>
+holds the GIL - Python-level dispatch, small-array ops, per-element Python callbacks such as
+<code>DataFrame.apply</code>, and ordinary Python code. Which side an <em>operation</em> falls on is not a property of the
+library it lives in: <code>numpy_small_ops</code> and <code>numpy_matmul</code> above are the same library on opposite
+sides, and <code>pandas_groupby</code> scales on every build.</li>
 </ul>
 
 <h3>8. Measured facts (both builds on this machine)</h3>
