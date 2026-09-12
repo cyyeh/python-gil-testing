@@ -30,8 +30,9 @@ CATEGORY_BLURB = {
            "expect flat lines on GIL builds and genuine parallel speed-up on the free-threaded build.",
     "io": "Threads spend their time waiting. The GIL is released while blocked, so all builds overlap the "
           "waits equally - free-threading was never needed here.",
-    "contended": "All threads hammer one shared object. Without the GIL, every operation takes the object's "
-                 "own lock (or a threading.Lock), so this shows the cost of fine-grained locking.",
+    "contended": "All threads hammer one shared object. Without the GIL, every operation still takes a lock: the "
+                 "object's own critical section, plus - in contended_dict_update - an explicit threading.Lock that "
+                 "every build pays for. This is the cost of fine-grained locking.",
     "multiprocessing": "The classic GIL workaround: processes instead of threads. Includes process start-up "
                        "and pickling overhead, and the same work as cpu_primes for direct comparison.",
     "library": "Third-party extension modules. Some release the GIL in C already (so they scale on every build), "
@@ -438,9 +439,12 @@ def workload_table(by_config: dict, workers: list[int], configs: list[str]) -> s
                 if st:
                     noisy = ""
                     if st["cv"] > NOISY_CV:
+                        # suggest more repeats than this run already used - it had st['n'] of them
+                        more = max(10, st["n"] * 2)
                         noisy = " " + tip("~", f"Noisy cell: coefficient of variation {st['cv']:.0%} (stdev / mean) is above "
                                                f"{NOISY_CV:.0%}. Differences smaller than this spread are not meaningful; "
-                                               f"re-run with more repeats (--repeats 10) to confirm.", "noisy")
+                                               f"this cell was already timed {st['n']}x, so re-run the workload alone with "
+                                               f"--repeats {more} to confirm - a spread that stays is a real property.", "noisy")
                     pm = tip(f"&plusmn;{_fmt_s(st['stdev'])}",
                              f"{st['n']} timed repeats: median {_fmt_s(st['median'])}, mean {_fmt_s(st['mean'])}, "
                              f"sample stdev {_fmt_s(st['stdev'])}, min {_fmt_s(st['min'])}, max {_fmt_s(st['max'])}, "
@@ -519,6 +523,33 @@ def _summary_table(doc: dict, p: dict, configs: list[str]) -> str:
               '(hover, focus or tap any symbol for its meaning).</p>')
 
 
+def _shared_binary_note(doc: dict) -> str:
+    """Warn, up front, when several columns are one interpreter run with different settings.
+
+    A column labelled "3.14 (GIL on)" reads like a stock build. Here it is the free-threaded
+    binary with PYTHON_GIL=1, so a difference against 3.12 carries the free-threaded build's
+    own overhead as well as the version change. That belongs next to the numbers, not only in
+    the configuration table's note column.
+    """
+    by_binary: dict[str, list[dict]] = {}
+    for c in doc["configs"]:
+        by_binary.setdefault(c.get("python") or c["label"], []).append(c)
+    shared = [group for group in by_binary.values() if len(group) > 1]
+    if not shared:
+        return ""
+    out = []
+    for group in shared:
+        labels = [f"<strong>{html.escape(c['label'])}</strong>" for c in group]
+        listed = ", ".join(labels[:-1]) + " and " + labels[-1]
+        ft = all((c.get("facts") or {}).get("free_threaded_build") for c in group)
+        out.append(f'<p class="callout note"><strong>{len(group)} columns, one interpreter.</strong> {listed} are the '
+                   f'same binary run with different GIL settings - not different builds.'
+                   + (" No stock (GIL-enabled) build of that version was measured here, so a gap between any of them "
+                      "and 3.12 mixes the version change with the free-threaded build's own overhead." if ft else "")
+                   + "</p>")
+    return "".join(out)
+
+
 def _config_table(doc: dict) -> str:
     rows = []
     for c in doc["configs"]:
@@ -542,7 +573,7 @@ def _facts_table(doc: dict) -> str:
     rows = []
     scalar = [("Python version", "version"), ("ABI flags (sys.abiflags)", "abiflags"), ("SOABI", "soabi"),
               ("Free-threaded build (Py_GIL_DISABLED)", "free_threaded_build"), ("GIL enabled at run", "gil_enabled"),
-              ("sys.flags.gil (None = build default)", "gil_flag"), ("sys.flags.thread_inherit_context", "thread_inherit_context"),
+              ("sys.flags.gil (None = no override; absent before 3.13)", "gil_flag"), ("sys.flags.thread_inherit_context", "thread_inherit_context"),
               ("sys.flags.context_aware_warnings", "context_aware_warnings"), ("JIT available (sys._jit)", "jit_available"),
               ("gc.get_threshold()", "gc_threshold"), ("compiler", "compiler")]
     for label, key in scalar:
@@ -598,11 +629,14 @@ further with tagged <em>stack references</em> in the evaluation loop.</li>
 its heap structures let the collector <em>enumerate</em> objects.</li>
 <li>Because of that, the free-threaded build drops the 16-byte <code>PyGC_Head</code> doubly-linked-list pre-header that
 every GC-tracked object carries on 3.12. <strong>Measured here:</strong> <code>[]</code>, <code>{{}}</code> and class
-instances are the <em>same</em> size on both builds - the bigger object header is exactly offset by the missing GC header.</li>
+instances come out the <em>same</em> size on both builds - for them the bigger object header is exactly offset by the
+missing GC header. It does not cancel everywhere: in the same table a 2-tuple and a <code>lambda</code> are still 8 bytes
+larger on 3.14t.</li>
 <li>The cycle collector is <strong>stop-the-world</strong>: it pauses every thread at a safe point (the "eval breaker"
 check), runs a single-generation collection, then resumes them. The default (GIL) 3.14 build keeps its generational
-collector. Note that <code>gc.get_threshold()</code> reads <code>(2000, 10, 10)</code> on both 3.14 builds versus
-<code>(700, 10, 10)</code> on 3.12 - that is a 3.12&rarr;3.14 change, not a free-threading one.</li>
+collector. Note that <code>gc.get_threshold()</code> reads <code>(2000, 10, 10)</code> on every 3.14 column versus
+<code>(700, 10, 10)</code> on 3.12. That is a 3.12&rarr;3.14 change rather than a free-threading one - but this run cannot
+be the evidence for it, because it never measured a stock 3.14: all three 3.14 columns are the one free-threaded binary.</li>
 </ul>
 
 <h3>4. Per-object locks and critical sections</h3>
@@ -620,10 +654,12 @@ is still a read-modify-write race, exactly as it was with the GIL - only the int
 <ul>
 <li>The specialising adaptive interpreter rewrites bytecodes in place, which is a data race if two threads run the same code
 object. 3.14t solves this with <strong>thread-local bytecode</strong> (<code>-X tlbc</code>, <code>PYTHON_TLBC</code>): each
-thread specialises its own copy. This is what brought single-thread overhead down from ~40% (3.13t) to the level measured in
-the "single-threaded overhead" finding above.</li>
-<li>The experimental JIT is not available in the free-threaded build (<code>sys._jit.is_available()</code> is
-<code>False</code> here).</li>
+thread specialises its own copy. This is what brought single-thread overhead down from the ~40% reported for 3.13t. The
+"single-threaded overhead" finding above does not isolate it: its figure against 3.12 also carries every other
+3.12&rarr;3.14 change, and its figure against "3.14 (GIL on)" compares the free-threaded binary with itself.</li>
+<li>The experimental JIT is not built for the free-threaded build. <code>sys._jit.is_available()</code> is
+<code>False</code> on the binary measured here - though that call only reports whether <em>this</em> binary was compiled
+with the JIT, so it confirms the build rather than isolating free-threading as the reason.</li>
 <li>Thread switching no longer exists as a concept. <code>sys.setswitchinterval</code> still exists and still accepts a
 value, but with the GIL off there is no hand-off for it to govern - threads simply run.</li>
 </ul>
@@ -661,7 +697,7 @@ library it lives in: <code>numpy_small_ops</code> and <code>numpy_matmul</code> 
 sides, and <code>pandas_groupby</code> scales on every build.</li>
 </ul>
 
-<h3>8. Measured facts (both builds on this machine)</h3>
+<h3>8. Measured facts (every configuration on this machine)</h3>
 {_facts_table(doc)}
 """
 
@@ -783,6 +819,7 @@ table.support td:nth-child(4) { white-space: nowrap; }
 .badge.good { color: var(--good); } .badge.warning { color: var(--warning); } .badge.serious { color: var(--serious); } .badge.critical { color: var(--critical); }
 .badge-icon { font-weight: 700; }
 .callout { padding: 10px 14px; border-radius: 8px; border-left: 4px solid var(--critical); background: var(--callout-bg); }
+.callout.note { border-left-color: var(--s1); background: var(--code-bg); }
 .category { margin-top: 28px; }
 .category > p.blurb { color: var(--text-2); }
 article.workload { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 6px; margin: 14px 0;
@@ -1004,6 +1041,7 @@ def render_html(doc: dict) -> str:
 <nav class="toc"><a href="#findings">Key findings</a><a href="#summary">Summary</a><a href="#core">Bare Python</a>
 {'<a href="#libs">Libraries</a>' if libs else ''}<a href="#impl">Implementation differences</a><a href="#method">Reproduce</a></nav>
 
+{_shared_binary_note(doc)}
 <h2 id="findings">Key findings</h2>
 <ul class="findings">{findings}</ul>
 
