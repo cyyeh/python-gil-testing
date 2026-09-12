@@ -23,8 +23,8 @@ import sys
 from pathlib import Path
 
 from bench import report, run
-from bench.run import DEFAULT_PY312, DEFAULT_PY314T
-from bench.report import FT, pivot, speedup, _fmt_s, _fmt_x
+from bench.run import DEFAULT_PY312, DEFAULT_PY314T, DEFAULT_REPEATS
+from bench.report import FT, cell_stats, pivot, speedup, _fmt_s, _fmt_x
 from bench.worker import ALL_WORKLOADS
 from bench.workloads import Workload
 
@@ -50,7 +50,7 @@ def guidance(package: str) -> str:
   * The return value must be identical for every n_workers (tests check this).
   * Add a test in tests/test_lib_workloads.py, run it with both .venv312 and .venv314t,
     then re-run:  python -m bench.compare_lib {package}
-  (The repo skill .claude/skills/gil-lib-compare/SKILL.md walks through this.)"""
+  (The repo skill .agents/skills/gil-lib-compare/SKILL.md walks through this.)"""
 
 
 def install_command(packages: list[str], python: str) -> list[str]:
@@ -81,13 +81,16 @@ def summarize(doc: dict, workload_names: list[str]) -> str:
     for name in workload_names:
         if name not in p:
             continue
-        lines.append(f"{name}  (speed-up 1->{max_w} workers, time at {max_w})")
+        lines.append(f"{name}  (speed-up 1->{max_w} workers; median ± stdev at {max_w})")
         for cfg in report._configs_present(doc):
             bw = p[name].get(cfg)
             if not bw:
                 continue
-            flag = "  [GIL re-enabled by import]" if cfg == FT and bw.get(max_w, {}).get("gil_enabled") else ""
-            lines.append(f"    {cfg:30s} {_fmt_x(speedup(bw)):>6s}  {_fmt_s(bw.get(max_w, {}).get('median')):>10s}{flag}")
+            rec = bw.get(max_w, {})
+            st = cell_stats(rec) if rec else None
+            spread = f" ± {_fmt_s(st['stdev'])} (n={st['n']}{', NOISY' if st['cv'] > report.NOISY_CV else ''})" if st else ""
+            flag = "  [GIL re-enabled by import]" if cfg == FT and rec.get("gil_enabled") else ""
+            lines.append(f"    {cfg:30s} {_fmt_x(speedup(bw)):>6s}  {_fmt_s(rec.get('median')):>10s}{spread}{flag}")
     return "\n".join(lines)
 
 
@@ -96,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("packages", nargs="+", help="import names, e.g. numpy pandas duckdb")
     ap.add_argument("--install", action="store_true", help="uv pip install the packages into both venvs first")
     ap.add_argument("--quick", action="store_true")
-    ap.add_argument("--repeats", type=int, default=3)
+    ap.add_argument("--repeats", type=int, default=DEFAULT_REPEATS)
     ap.add_argument("--workers", default="1,2,4,8")
     ap.add_argument("--out", default="results/results.json")
     ap.add_argument("--report", default="results/report.html")

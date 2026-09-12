@@ -53,3 +53,11 @@ class InstallCommandTest(unittest.TestCase):
         self.assertIn("--no-build", cmd)
         self.assertIn("polars", cmd)
         self.assertIn("/py314t", cmd)
+
+
+class SummaryStatsTest(unittest.TestCase):
+    def test_summary_shows_spread_and_repeat_count(self):
+        doc = make_doc(with_libs=True)
+        text = compare_lib.summarize(doc, ["numpy_matmul"])
+        self.assertIn("±", text)
+        self.assertIn("n=5", text)

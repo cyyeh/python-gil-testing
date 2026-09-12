@@ -8,9 +8,11 @@ from bench import report
 CFGS = ["3.12", "3.14 (GIL on)", "3.14t (free-threaded)"]
 
 
-def rec(config, workload, workers, median, category="cpu", gil=True, **over):
+def rec(config, workload, workers, median, category="cpu", gil=True, spread=0.02, **over):
+    from bench.worker import stats
+    seconds = [median * (1 - spread), median, median * (1 + spread), median, median]
     r = {"config": config, "workload": workload, "category": category, "workers": workers,
-         "seconds": [median] * 3, "median": median, "result": "1", "gil_enabled": gil,
+         "seconds": seconds, "median": median, "stats": stats(seconds), "result": "1", "gil_enabled": gil,
          "skipped": None, "error": None}
     r.update(over)
     return r
@@ -77,7 +79,42 @@ class SpeedupTest(unittest.TestCase):
         self.assertAlmostEqual(report.single_thread_ratio(p["cpu_primes"], "3.14t (free-threaded)", "3.12"), 1.08)
 
 
+class StatsInReportTest(unittest.TestCase):
+    def test_cell_stats_prefers_recorded_stats_and_falls_back_to_seconds(self):
+        r = rec("3.12", "cpu_primes", 1, 1.0)
+        self.assertEqual(report.cell_stats(r)["n"], 5)
+        legacy = {"seconds": [1.0, 1.2, 0.8], "median": 1.0}
+        self.assertAlmostEqual(report.cell_stats(legacy)["stdev"], 0.2, places=6)
+        self.assertIsNone(report.cell_stats({"seconds": [], "median": None}))
+
+    def test_noisy_cells_are_flagged_above_the_cv_threshold(self):
+        quiet = rec("3.12", "w", 1, 1.0, spread=0.02)
+        noisy = rec("3.12", "w", 1, 1.0, spread=0.30)
+        self.assertFalse(report.is_noisy(quiet))
+        self.assertTrue(report.is_noisy(noisy))
+
+    def test_table_shows_plus_minus_and_marks_noisy_cells(self):
+        by_config = {"3.12": {1: rec("3.12", "w", 1, 1.0, spread=0.30), 8: rec("3.12", "w", 8, 0.5)}}
+        html = report.workload_table(by_config, [1, 8], ["3.12"])
+        self.assertIn("&plusmn;", html)
+        self.assertIn('class="noisy"', html)
+
+    def test_key_findings_include_a_noise_summary(self):
+        text = " ".join(report.key_findings(make_doc()))
+        self.assertIn("noise", text.lower())
+        self.assertIn("%", text)
+
+
 class ChartTest(unittest.TestCase):
+    def test_line_chart_draws_error_bars_when_ranges_given(self):
+        svg = report.line_chart_svg({"A": {1: 1.0, 2: 0.5}}, [1, 2], "t",
+                                    ranges={"A": {1: (0.9, 1.1), 2: (0.4, 0.6)}})
+        self.assertEqual(svg.count('class="range'), 2)
+
+    def test_line_chart_without_ranges_has_no_error_bars(self):
+        svg = report.line_chart_svg({"A": {1: 1.0, 2: 0.5}}, [1, 2], "t")
+        self.assertEqual(svg.count('class="range'), 0)
+
     def test_line_chart_svg_has_one_path_and_markers_per_series(self):
         svg = report.line_chart_svg({"A": {1: 1.0, 2: 0.5}, "B": {1: 1.0, 2: 1.0}}, [1, 2], "t")
         self.assertIn("<svg", svg)
@@ -93,7 +130,7 @@ class RenderTest(unittest.TestCase):
     def test_core_report_has_every_section_and_no_library_section(self):
         html = report.render_html(make_doc())
         for needle in ("cpu_primes", "io_sleep", "3.14t (free-threaded)", "<svg", "Implementation differences",
-                       "Key findings", "Bare Python", "Reproduce"):
+                       "Key findings", "Bare Python", "Reproduce", "&plusmn;", 'class="range'):
             self.assertIn(needle, html)
         self.assertNotIn("Library workloads", html)
 

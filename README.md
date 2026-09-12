@@ -4,25 +4,35 @@ Benchmarks CPython **3.12** (GIL) against **3.14** with the GIL on and the
 **free-threaded 3.14t** build (GIL off), and renders a self-contained HTML report
 that also explains what changed inside the interpreter.
 
+**Latest report:** https://cyyeh.github.io/python-gil-testing/ (GitHub Pages serves
+`results/report.html` straight from `main`; re-run and push to update it).
+
 Bare-Python (stdlib) workloads are the core tier. Library workloads
 (numpy, pandas, duckdb, scikit-learn, fastapi) are an optional tier that goes
 through a **free-threading support check first** - because a single C extension
 that has not opted in silently re-enables the GIL for the whole process.
 
-## Start here: the `gil-lib-compare` skill (Claude Code)
+## Start here: the `gil-lib-compare` skill (any coding agent)
 
-This repo ships a skill at [`.claude/skills/gil-lib-compare/SKILL.md`](.claude/skills/gil-lib-compare/SKILL.md).
-Open the repo in Claude Code and it is picked up automatically. Use it for anything
-involving a library:
+The library-comparison workflow ships as an [Agent Skill](https://agentskills.io) so
+your coding agent follows the same gated flow every time. It is wired up for:
+
+| agent | how it finds the skill |
+|---|---|
+| Claude Code | auto-discovers `.claude/skills/gil-lib-compare/` - type `/gil-lib-compare` or just ask |
+| Codex CLI, GitHub Copilot, Cursor, Jules, Amp, ... | read `AGENTS.md`, which mandates `.agents/skills/gil-lib-compare/SKILL.md` |
+| Gemini CLI | `GEMINI.md` imports `AGENTS.md` |
+| anything else | tell it: *"follow `.agents/skills/gil-lib-compare/SKILL.md`"* |
+
+Then ask in plain words:
 
 ```text
-/gil-lib-compare                       # load the flow explicitly, or just ask:
 does duckdb support free-threading?
 add polars to the GIL vs free-threaded comparison and tell me how it does
 re-run the numpy comparison and regenerate the report
 ```
 
-The skill makes Claude follow one gated flow, in this order:
+The skill makes the agent follow one gated flow, in this order:
 
 1. install the library into **both** venvs, wheels only (`--no-build`; no `cp314t` wheel -> stop and tell you)
 2. run `check_gil_support.py` on 3.14t **before** any benchmark and **tell you immediately** if the
@@ -30,15 +40,18 @@ The skill makes Claude follow one gated flow, in this order:
 3. add a workload to `bench/lib_workloads.py` if none exists - constant total work, deterministic
    checksum, lazy import, warm-up, the library's own thread pool pinned
 4. run the tests on both interpreters
-5. `python -m bench.compare_lib <pkg>` - re-check, warn, benchmark, merge into `results/results.json`,
-   regenerate `results/report.html`
-6. report speed-ups per configuration, flag `[GIL re-enabled by import]`, link the report
+5. `python -m bench.compare_lib <pkg>` - re-check, warn, benchmark (5 timed repeats per cell by
+   default), merge into `results/results.json`, regenerate `results/report.html`
+6. report speed-ups per configuration with ± stdev, flag `[GIL re-enabled by import]`, link the report
 
 The five libraries already in `results/report.html` (numpy, pandas, duckdb, scikit-learn, fastapi)
 were produced through exactly this flow; duckdb is the example of a library that ships a
 `cp314t` wheel but still re-enables the GIL.
 
-Without Claude Code, the same flow by hand:
+`.agents/skills/...` is the canonical copy; `.claude/skills/...` mirrors it and
+`tests/test_agent_files.py` fails if they drift.
+
+Without an agent, the same flow by hand:
 
 ```bash
 .venv314t/bin/python check_gil_support.py <pkg>          # 1-2: is it safe? (exit 1 = no)
@@ -102,6 +115,9 @@ prints the contract for adding one. This is the command the skill above drives.
 
 ```
 setup.sh / run_all.sh      install + run + report
+index.html / .nojekyll     GitHub Pages entry point (redirects to results/report.html)
+AGENTS.md / CLAUDE.md / GEMINI.md   agent instructions (all point at the skill)
+.agents/skills/, .claude/skills/    the gil-lib-compare skill (canonical + Claude Code mirror)
 check_gil_support.py       standalone free-threading support checker
 bench/workloads.py         stdlib workloads: cpu_primes, cpu_float, io_sleep,
                            contended_list_append, contended_dict_update, mp_primes
@@ -129,8 +145,18 @@ tests/                     unittest suite; run on BOTH interpreters
 Every workload is `fn(n_workers, **sizes) -> value`. Total work is independent
 of `n_workers` and the return value must be identical at every thread count -
 `tests/` enforce this, so each run provably does the same work. Each
-(config, workload) pair runs in a fresh subprocess; medians of 3 repeats are
-reported; BLAS/OpenMP are pinned to one thread.
+(config, workload) pair runs in a fresh subprocess; BLAS/OpenMP are pinned to one thread.
+
+## Repeats and statistics
+
+Every (configuration, workload, thread count) cell is timed **5 times** by default;
+override with `--repeats N` on `bench.run` / `bench.compare_lib` (use 7-10 for
+sub-50 ms workloads). The worker records median, mean, sample standard deviation,
+min, max and coefficient of variation per cell (`results/results.json` -> `stats`).
+The report plots the median with min-max error bars, tables show
+median ± stdev (hover for min/max), cells with cv > 10% are marked `~`, and the
+"Key findings" list opens with a noise summary. Differences smaller than the error
+bars are noise, not findings.
 
 ## Portability
 

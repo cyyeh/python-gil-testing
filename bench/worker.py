@@ -23,6 +23,23 @@ from bench.workloads import Workload
 ALL_WORKLOADS: list[Workload] = workloads.WORKLOADS + lib_workloads.WORKLOADS
 ALL_BY_NAME = {spec.name: spec for spec in ALL_WORKLOADS}
 
+DEFAULT_REPEATS = 5  # timed repeats per (workload, thread count); override with --repeats
+
+
+def stats(seconds: list[float]) -> dict:
+    """Summary statistics of one cell's timed repeats (sample stdev; cv = stdev / mean)."""
+    mean = statistics.fmean(seconds)
+    stdev = statistics.stdev(seconds) if len(seconds) > 1 else 0.0
+    return {
+        "n": len(seconds),
+        "median": statistics.median(seconds),
+        "mean": mean,
+        "stdev": stdev,
+        "min": min(seconds),
+        "max": max(seconds),
+        "cv": stdev / mean if mean else 0.0,
+    }
+
 
 def gil_enabled() -> bool:
     # sys._is_gil_enabled() exists on 3.13+; older builds always have the GIL.
@@ -47,10 +64,12 @@ def measure(fn: Callable, workers: int, repeats: int, **kwargs) -> dict:
         t0 = time.perf_counter()
         result = fn(workers, **kwargs)
         seconds.append(time.perf_counter() - t0)
+    st = stats(seconds)
     return {
         "workers": workers,
         "seconds": seconds,
-        "median": statistics.median(seconds),
+        "median": st["median"],
+        "stats": st,
         "result": repr(result),
     }
 
@@ -62,6 +81,7 @@ def _base_record(spec: Workload, workers: int) -> dict:
         "workers": workers,
         "seconds": [],
         "median": None,
+        "stats": None,
         "result": None,
         "gil_enabled": gil_enabled(),
         "skipped": None,
@@ -110,7 +130,7 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--workload", required=True, choices=sorted(ALL_BY_NAME))
     ap.add_argument("--workers", default="1,2,4,8")
-    ap.add_argument("--repeats", type=int, default=3)
+    ap.add_argument("--repeats", type=int, default=DEFAULT_REPEATS)
     ap.add_argument("--kwargs", default="{}", help="JSON dict of extra kwargs for the workload")
     args = ap.parse_args(argv)
 

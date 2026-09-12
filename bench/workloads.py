@@ -164,7 +164,7 @@ class Workload:
     fn: Callable[[int], object]
     description: str
     requires: tuple[str, ...] = ()  # importable third-party packages needed
-    warmup: bool = False  # run fn(1) once untimed first (lazy imports, server start-up)
+    warmup: bool = True  # run fn(1) once untimed first (cold caches, lazy imports, server start-up)
 
 
 WORKLOADS: list[Workload] = [

@@ -159,9 +159,15 @@ class WarmupTest(unittest.TestCase):
         self.assertEqual(calls, [1, 4, 4])  # one untimed warm-up at 1 worker, then 2 timed repeats
         self.assertEqual(len(out[0]["seconds"]), 2)
 
-    def test_no_warmup_by_default(self):
+    def test_warmup_is_on_by_default_for_every_workload(self):
         calls = []
         spec = Workload("w", "cpu", lambda n, **kw: calls.append(n), "x")
+        worker.run_workload(spec, workers_list=[4], repeats=1)
+        self.assertEqual(calls, [1, 4])
+
+    def test_warmup_can_be_disabled(self):
+        calls = []
+        spec = Workload("w", "cpu", lambda n, **kw: calls.append(n), "x", warmup=False)
         worker.run_workload(spec, workers_list=[4], repeats=1)
         self.assertEqual(calls, [4])
 
@@ -192,3 +198,34 @@ class VenvPythonTest(unittest.TestCase):
 
     def test_windows_layout(self):
         self.assertEqual(run.venv_python("C:/r/.venv312", win=True), "C:/r/.venv312/Scripts/python.exe")
+
+
+class StatsTest(unittest.TestCase):
+    def test_stats_summarise_a_sample(self):
+        s = worker.stats([1.0, 2.0, 3.0, 4.0, 10.0])
+        self.assertEqual(s["n"], 5)
+        self.assertEqual(s["median"], 3.0)
+        self.assertEqual(s["mean"], 4.0)
+        self.assertEqual(s["min"], 1.0)
+        self.assertEqual(s["max"], 10.0)
+        self.assertAlmostEqual(s["stdev"], 3.5355, places=3)  # sample stdev
+        self.assertAlmostEqual(s["cv"], 3.5355 / 4.0, places=3)
+
+    def test_stats_single_sample_has_zero_spread(self):
+        s = worker.stats([2.5])
+        self.assertEqual(s["stdev"], 0.0)
+        self.assertEqual(s["cv"], 0.0)
+        self.assertEqual(s["min"], s["max"])
+
+    def test_measure_record_carries_stats(self):
+        rec = worker.measure(lambda n: n, workers=2, repeats=4)
+        self.assertEqual(rec["stats"]["n"], 4)
+        self.assertEqual(rec["stats"]["median"], rec["median"])
+
+
+class DefaultRepeatsTest(unittest.TestCase):
+    def test_default_repeats_is_five_everywhere(self):
+        from bench import compare_lib
+        self.assertEqual(run.DEFAULT_REPEATS, 5)
+        self.assertEqual(compare_lib.DEFAULT_REPEATS, 5)
+        self.assertEqual(worker.DEFAULT_REPEATS, 5)

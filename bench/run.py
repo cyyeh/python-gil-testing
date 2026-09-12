@@ -27,7 +27,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from bench.worker import ALL_WORKLOADS
+from bench.worker import ALL_WORKLOADS, DEFAULT_REPEATS
 from bench.workloads import Workload
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -185,7 +185,8 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", default="results/results.json")
     ap.add_argument("--workers", default="1,2,4,8")
-    ap.add_argument("--repeats", type=int, default=3)
+    ap.add_argument("--repeats", type=int, default=DEFAULT_REPEATS,
+                    help=f"timed repeats per thread count (default {DEFAULT_REPEATS}); median is plotted")
     ap.add_argument("--only", default="", help="comma-separated workload names (overrides tiers)")
     ap.add_argument("--libs", action="store_true", help="include all library workloads")
     ap.add_argument("--packages", default="", help="comma-separated packages: include library workloads needing them")
@@ -241,7 +242,7 @@ def main(argv: list[str] | None = None) -> None:
             result, stderr = run_one(cfg, spec.name, args.workers, args.repeats, kwargs)
             if result is None:
                 doc["records"].append({"config": cfg["label"], "workload": spec.name, "category": spec.category,
-                                       "workers": None, "seconds": [], "median": None, "result": None,
+                                       "workers": None, "seconds": [], "median": None, "stats": None, "result": None,
                                        "gil_enabled": None, "skipped": None, "error": stderr[-2000:]})
             else:
                 cfg_doc["info"] = cfg_doc["info"] or result["env"]

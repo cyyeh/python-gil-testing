@@ -61,6 +61,30 @@ def pivot(doc: dict) -> dict:
     return out
 
 
+NOISY_CV = 0.10  # flag a cell when stdev / mean exceeds this
+
+
+def cell_stats(rec: dict):
+    """Statistics for one cell; falls back to computing from raw seconds for older results."""
+    if rec.get("stats"):
+        return rec["stats"]
+    if rec.get("seconds"):
+        from bench.worker import stats
+        return stats(rec["seconds"])
+    return None
+
+
+def is_noisy(rec: dict) -> bool:
+    st = cell_stats(rec)
+    return bool(st and st["cv"] > NOISY_CV)
+
+
+def _range(by_workers: dict, workers: int):
+    rec = by_workers.get(workers)
+    st = cell_stats(rec) if rec else None
+    return (st["min"], st["max"]) if st else None
+
+
 def _median(by_workers: dict, workers: int):
     rec = by_workers.get(workers)
     return rec["median"] if rec and rec.get("median") is not None else None
@@ -154,6 +178,14 @@ def key_findings(doc: dict) -> list[str]:
             out.append(f"Threads on 3.14t vs processes on 3.12 for the same prime-counting work at {max_w} workers: "
                        f"{_fmt_s(th)} vs {_fmt_s(mp)} - multiprocessing pays start-up and pickling costs.")
 
+    cvs = [cell_stats(r)["cv"] for r in doc["records"] if r.get("median") is not None and cell_stats(r)]
+    if cvs:
+        n_noisy = sum(1 for cv in cvs if cv > NOISY_CV)
+        ns = {cell_stats(r)["n"] for r in doc["records"] if r.get("median") is not None and cell_stats(r)}
+        out.append(f"Measurement noise: {min(ns)}{'-' + str(max(ns)) if len(ns) > 1 else ''} timed repeats per cell, "
+                   f"median coefficient of variation {statistics.median(cvs) * 100:.1f}%; "
+                   f"{n_noisy} of {len(cvs)} cells exceed {NOISY_CV:.0%} (marked ~ in the tables).")
+
     for pkg, e in doc.get("gil_support", {}).items():
         if e["status"] == "REENABLES_GIL":
             out.append(f"Library '{pkg}' does NOT support free-threading: importing it re-enabled the GIL "
@@ -204,11 +236,14 @@ def _marker(kind: str, x: float, y: float, cls: str) -> str:
 
 
 def line_chart_svg(series: dict, xs: list, title: str, y_label: str = "median wall time (s) - lower is better",
-                   x_label: str = "threads / workers") -> str:
+                   x_label: str = "threads / workers", ranges: dict | None = None) -> str:
+    """``ranges`` = {label: {x: (lo, hi)}} draws a min-max error bar behind each marker."""
     W, H = 680, 320
     ml, mr, mt, mb = 56, 140, 36, 44
     pw, ph = W - ml - mr, H - mt - mb
     vals = [v for s in series.values() for v in s.values() if v is not None]
+    if ranges:
+        vals += [hi for r in ranges.values() for rng in r.values() if rng for hi in [rng[1]]]
     vmax = max(vals) if vals else 1.0
     ticks = _nice_ticks(vmax)
     top = ticks[-1]
@@ -245,6 +280,13 @@ def line_chart_svg(series: dict, xs: list, title: str, y_label: str = "median wa
         for seg in segs:
             if seg:
                 parts.append(f'<path class="series-line {cls}" d="{seg}"/>')
+        for x in xs:
+            rng = (ranges or {}).get(label, {}).get(x)
+            if rng and rng[1] > rng[0]:
+                cx = xpos[x] + (i - (len(series) - 1) / 2) * 3  # tiny horizontal offset so bars do not overlap
+                lo, hi = ypos(rng[0]), ypos(rng[1])
+                parts.append(f'<path class="range {cls}" d="M{cx:.1f} {lo:.1f} L{cx:.1f} {hi:.1f} '
+                             f'M{cx - 3:.1f} {lo:.1f} L{cx + 3:.1f} {lo:.1f} M{cx - 3:.1f} {hi:.1f} L{cx + 3:.1f} {hi:.1f}"/>')
         last = None
         for x in xs:
             v = pts.get(x)
@@ -268,8 +310,9 @@ def line_chart_svg(series: dict, xs: list, title: str, y_label: str = "median wa
         f'<span class="legend-item"><svg class="legend-glyph" viewBox="0 0 14 14" aria-hidden="true">'
         f'{_marker(_MARKERS[i % 4], 7, 7, f"s{i + 1}")}</svg>{html.escape(label)}</span>'
         for i, label in enumerate(series))
-    data = {"xs": xs, "xpos": [xpos[x] for x in xs], "series": [{"label": l, "vals": [pts.get(x) for x in xs]}
-                                                                for l, pts in series.items()]}
+    data = {"xs": xs, "xpos": [xpos[x] for x in xs],
+            "series": [{"label": l, "vals": [pts.get(x) for x in xs],
+                        "rng": [(ranges or {}).get(l, {}).get(x) for x in xs]} for l, pts in series.items()]}
     return (f'<div class="chart-wrap" data-chart=\'{html.escape(json.dumps(data), quote=True)}\'>'
             + "".join(parts) + f'<div class="legend-row">{legend}</div><div class="tooltip" hidden></div></div>')
 
@@ -304,17 +347,26 @@ def workload_table(by_config: dict, workers: list[int], configs: list[str]) -> s
                 flag = ""
                 if c == FT and rec.get("gil_enabled"):
                     flag = ' <span class="flag" title="GIL re-enabled by an extension module at import">&#9888;</span>'
-                cells.append(f"<td>{_fmt_s(rec['median'])}{flag}</td>")
+                st = cell_stats(rec)
+                pm = ""
+                if st:
+                    noisy = f' <span class="noisy" title="coefficient of variation {st["cv"]:.0%} > {NOISY_CV:.0%}">~</span>' if st["cv"] > NOISY_CV else ""
+                    pm = (f'<span class="pm" title="{st["n"]} repeats: min {_fmt_s(st["min"])}, max {_fmt_s(st["max"])}, '
+                          f'cv {st["cv"]:.1%}">&plusmn;{_fmt_s(st["stdev"])}</span>{noisy}')
+                cells.append(f"<td>{_fmt_s(rec['median'])} {pm}{flag}</td>")
         sp = speedup(bw)
         rows.append(f"<tr><th scope=\"row\"><span class=\"swatch s{configs.index(c) + 1}\"></span>{html.escape(c)}</th>"
                     + "".join(cells) + f"<td class=\"num\">{_fmt_x(sp)}</td></tr>")
     return (f'<table class="data"><thead><tr><th>configuration</th>{head}<th>speed-up {workers[0]}&rarr;{workers[-1]}</th>'
-            f"</tr></thead><tbody>{''.join(rows)}</tbody></table>")
+            f"</tr></thead><tbody>{''.join(rows)}</tbody></table>"
+            '<p class="muted small">median &plusmn; sample standard deviation over the timed repeats; '
+            'hover a cell for min / max; ~ marks a noisy cell (cv &gt; 10%).</p>')
 
 
 def _workload_block(w: dict, by_config: dict, doc: dict, configs: list[str]) -> str:
     workers = doc["workers"]
     series = {c: {k: _median(by_config[c], k) for k in workers} for c in configs if c in by_config}
+    ranges = {c: {k: _range(by_config[c], k) for k in workers} for c in series}
     flagged = any(c == FT and by_config[c].get(k, {}).get("gil_enabled") for c in series for k in workers)
     note = ""
     if flagged:
@@ -327,7 +379,7 @@ def _workload_block(w: dict, by_config: dict, doc: dict, configs: list[str]) -> 
                        for c, bc in by_config.items() for k, r in bc.items() if isinstance(k, int) and r.get("error"))
     return (f'<article class="workload" id="w-{w["name"]}"><h4><code>{w["name"]}</code></h4>'
             f'<p class="desc">{html.escape(w["description"])}</p>{note}'
-            + line_chart_svg(series, workers, w["name"]) + workload_table(by_config, workers, configs)
+            + line_chart_svg(series, workers, w["name"], ranges=ranges) + workload_table(by_config, workers, configs)
             + errors + err_recs + "</article>")
 
 
@@ -515,11 +567,14 @@ def _methodology(doc: dict) -> str:
 <h2 id="method">Methodology &amp; how to reproduce</h2>
 <ul>
 <li>Each (configuration, workload) pair runs in a <strong>fresh subprocess</strong> so an import that re-enables the GIL cannot
-leak into other measurements. Each thread count is repeated {doc['repeats']}x and the <strong>median</strong> wall time is plotted.</li>
+leak into other measurements. Each thread count is timed {doc['repeats']}x (<code>--repeats</code>, default 5); the
+<strong>median</strong> is plotted, error bars show the min-max range, and tables give median &plusmn; sample standard
+deviation. Cells whose coefficient of variation exceeds {NOISY_CV:.0%} are marked ~; treat differences smaller than the
+error bars as noise.</li>
 <li>Every workload returns a value that must be identical for every thread count (checked by <code>tests/</code>), so each run
 does the same total work.</li>
 <li>BLAS/OpenMP are pinned to one thread (<code>OPENBLAS_NUM_THREADS=1</code> etc.) so scaling reflects Python threads only.
-Third-party-library workloads get one untimed warm-up call (lazy imports, uvicorn start-up).</li>
+Every workload gets one untimed warm-up call first (cold caches, lazy imports, uvicorn start-up).</li>
 <li>Thread counts: {', '.join(map(str, doc['workers']))} on a {html.escape(str(doc['host'].get('ncpu')))}-core
 {html.escape(str(doc['host'].get('cpu')))} ({html.escape(str(doc['host'].get('os')))}).{' <strong>Quick mode</strong> (reduced problem sizes).' if doc.get('quick') else ''}</li>
 </ul>
@@ -588,6 +643,8 @@ table.support td:nth-child(4) { white-space: nowrap; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; }
 .swatch.s1 { background: var(--s1); } .swatch.s2 { background: var(--s2); } .swatch.s3 { background: var(--s3); } .swatch.s4 { background: var(--s4); }
 .flag { color: var(--critical); }
+.pm { color: var(--text-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.noisy { color: var(--warning); font-weight: 700; cursor: help; }
 .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; padding: 1px 8px 1px 6px; border-radius: 999px; border: 1px solid currentColor; }
 .badge.good { color: var(--good); } .badge.warning { color: var(--warning); } .badge.serious { color: var(--serious); } .badge.critical { color: var(--critical); }
 .badge-icon { font-weight: 700; }
@@ -605,6 +662,7 @@ svg.chart .axis-label { font-size: 11px; fill: var(--text-3); }
 svg.chart .grid { stroke: var(--grid); stroke-width: 1; }
 svg.chart .series-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 svg.chart .marker { stroke: var(--surface); stroke-width: 2; }
+svg.chart .range { fill: none; stroke-width: 1.5; opacity: .55; }
 svg.chart .s1 { stroke: var(--s1); } svg.chart .s2 { stroke: var(--s2); } svg.chart .s3 { stroke: var(--s3); } svg.chart .s4 { stroke: var(--s4); }
 svg.chart .marker.s1 { fill: var(--s1); } svg.chart .marker.s2 { fill: var(--s2); } svg.chart .marker.s3 { fill: var(--s3); } svg.chart .marker.s4 { fill: var(--s4); }
 svg.chart .end-label { font-size: 11px; fill: var(--text-2); }
@@ -619,6 +677,7 @@ svg.chart .hit { cursor: crosshair; }
 .tooltip .t-x { color: var(--text-2); margin-bottom: 3px; }
 .tooltip .t-row { display: flex; justify-content: space-between; gap: 10px; }
 .tooltip .t-row strong { font-variant-numeric: tabular-nums; }
+.tooltip .t-r { font-weight: 400; color: var(--text-3); font-size: 11px; }
 .tooltip .t-row .t-l { display: inline-flex; align-items: center; gap: 5px; color: var(--text-2); }
 .tooltip .t-l i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
 details { margin: 6px 0; } summary { cursor: pointer; color: var(--text-2); font-size: 13px; }
@@ -650,6 +709,9 @@ _JS = """
         var dot = document.createElement('i'); dot.style.background = css.getPropertyValue(colors[i % 4]);
         l.appendChild(dot); l.appendChild(document.createTextNode(s.label));
         var v = document.createElement('strong'); v.textContent = fmt(s.vals[best]);
+        var r = s.rng && s.rng[best];
+        if (r) { var sm = document.createElement('span'); sm.className = 't-r';
+                 sm.textContent = ' (' + fmt(r[0]) + ' – ' + fmt(r[1]) + ')'; v.appendChild(sm); }
         row.appendChild(l); row.appendChild(v); tip.appendChild(row);
       });
       tip.hidden = false;
