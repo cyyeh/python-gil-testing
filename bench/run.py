@@ -27,7 +27,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from bench.worker import ALL_WORKLOADS, DEFAULT_REPEATS
+from bench.worker import ALL_WORKLOADS, DEFAULT_REPEATS, default_workers, usable_cpus
 from bench.workloads import Workload
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -131,6 +131,17 @@ def merge_results(existing: dict, new: dict) -> dict:
     return merged
 
 
+def resolve_workers(explicit: str | None, existing: dict) -> tuple[list[int], str]:
+    """--workers wins; then the counts already in the file being merged into; then the machine."""
+    if explicit:
+        return [int(w) for w in explicit.split(",") if w.strip()], "--workers"
+    if existing.get("workers"):
+        # a merged file whose workloads were measured at different thread counts cannot be
+        # compared row to row, so an incremental run inherits the counts already in it
+        return [int(w) for w in existing["workers"]], "already in the results file"
+    return default_workers(), f"{usable_cpus()} usable cores"
+
+
 def host_info() -> dict:
     cpu = platform.processor() or platform.machine()
     if sys.platform == "darwin":
@@ -184,7 +195,9 @@ def warn_unsupported(gil_support: dict) -> None:
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", default="results/results.json")
-    ap.add_argument("--workers", default="1,2,4,8")
+    ap.add_argument("--workers", default=None,
+                    help="comma-separated thread counts; default: 1..cores on this machine, or the "
+                         "counts already in --out when adding to an existing run")
     ap.add_argument("--repeats", type=int, default=DEFAULT_REPEATS,
                     help=f"timed repeats per thread count (default {DEFAULT_REPEATS}); median is plotted")
     ap.add_argument("--only", default="", help="comma-separated workload names (overrides tiers)")
@@ -214,11 +227,17 @@ def main(argv: list[str] | None = None) -> None:
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     existing = json.loads(out.read_text()) if out.exists() and not args.fresh else {}
+    workers, why = resolve_workers(args.workers, existing)
+    print(f"\n== thread counts: {', '.join(map(str, workers))}  ({why})", file=sys.stderr, flush=True)
+    if existing.get("workers") and [int(w) for w in existing["workers"]] != workers:
+        print(f"   !! {out} holds records measured at {existing['workers']}. Workloads not re-run now keep "
+              f"those counts, so the report will have gaps; re-run everything (--fresh) to keep it comparable.",
+              file=sys.stderr, flush=True)
 
     doc = {
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
         "host": host_info(),
-        "workers": [int(w) for w in args.workers.split(",")],
+        "workers": workers,
         "repeats": args.repeats,
         "quick": args.quick,
         "configs": [],
@@ -239,7 +258,7 @@ def main(argv: list[str] | None = None) -> None:
             if cfg.get("only_workloads") and spec.name not in cfg["only_workloads"]:
                 continue
             kwargs = QUICK_KWARGS.get(spec.name, {}) if args.quick else {}
-            result, stderr = run_one(cfg, spec.name, args.workers, args.repeats, kwargs)
+            result, stderr = run_one(cfg, spec.name, ",".join(map(str, workers)), args.repeats, kwargs)
             if result is None:
                 doc["records"].append({"config": cfg["label"], "workload": spec.name, "category": spec.category,
                                        "workers": None, "seconds": [], "median": None, "stats": None, "result": None,

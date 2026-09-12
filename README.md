@@ -123,7 +123,7 @@ bench/workloads.py         stdlib workloads: cpu_primes, cpu_float, io_sleep,
                            contended_list_append, contended_dict_update, mp_primes
 bench/lib_workloads.py     library workloads: numpy_small_ops, numpy_matmul, pandas_groupby,
                            duckdb_query, sklearn_fit, fastapi_sync_cpu, fastapi_async_json
-bench/worker.py            runs one workload at 1/2/4/8 threads inside one interpreter
+bench/worker.py            runs one workload at each thread count inside one interpreter
 bench/run.py               drives every (config x workload) in its own subprocess -> results/results.json
 bench/facts.py             measured build facts (ABI tag, flags, object sizes) per interpreter
 bench/report.py            results.json -> results/report.html (inline SVG, no network)
@@ -176,7 +176,9 @@ tells you if one is missing).
   .venv312\Scripts\python.exe -m bench.run          # defaults find Scripts\python.exe automatically
   .venv312\Scripts\python.exe -m bench.report          # -> results\report.html
   ```
-* Thread counts default to `1,2,4,8`; pass `--workers 1,2,4,8,16` on bigger machines.
+* Thread counts default to this machine's: 1, doubling, up to the usable core count (capped at
+  6 points, so a 64-core box does not multiply the run time). Adding to an existing
+  `results.json` reuses the counts already in it. `--workers 1,2,4,8,16` overrides both.
   Absolute numbers depend on the CPU; the *shapes* (flat on GIL builds, scaling on 3.14t) do not.
 * `--install` uses `uv pip install --no-build`, so a library without a `cp314t` wheel fails
   fast instead of starting a long source build.

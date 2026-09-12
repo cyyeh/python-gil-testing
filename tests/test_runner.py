@@ -235,3 +235,43 @@ class DefaultRepeatsTest(unittest.TestCase):
         self.assertEqual(run.DEFAULT_REPEATS, 5)
         self.assertEqual(compare_lib.DEFAULT_REPEATS, 5)
         self.assertEqual(worker.DEFAULT_REPEATS, 5)
+
+
+class DefaultWorkersTest(unittest.TestCase):
+    """The thread ladder comes from the machine unless someone says otherwise."""
+
+    def test_ladder_starts_at_one_and_ends_at_the_core_count(self):
+        for n in (1, 2, 3, 4, 6, 8, 10, 12, 16, 64, 256):
+            ladder = worker.default_workers(n)
+            self.assertEqual(ladder[0], 1, n)     # every speed-up is measured against 1 thread
+            self.assertEqual(ladder[-1], n, n)    # and up to where the cores run out
+            self.assertEqual(ladder, sorted(set(ladder)), n)
+
+    def test_ladder_doubles_on_a_machine_it_fits(self):
+        self.assertEqual(worker.default_workers(8), [1, 2, 4, 8])
+        self.assertEqual(worker.default_workers(10), [1, 2, 4, 8, 10])
+        self.assertEqual(worker.default_workers(1), [1])
+
+    def test_ladder_is_capped_so_a_big_machine_does_not_multiply_the_run_time(self):
+        for n in (64, 128, 1024):
+            self.assertLessEqual(len(worker.default_workers(n)), worker.MAX_LADDER, n)
+
+    def test_usable_cpus_is_positive_and_drives_the_default(self):
+        self.assertGreaterEqual(worker.usable_cpus(), 1)
+        self.assertEqual(worker.default_workers(), worker.default_workers(worker.usable_cpus()))
+
+
+class ResolveWorkersTest(unittest.TestCase):
+    def test_explicit_workers_win(self):
+        self.assertEqual(run.resolve_workers("1,3,7", {"workers": [1, 2]})[0], [1, 3, 7])
+
+    def test_an_existing_results_file_keeps_its_thread_counts(self):
+        # adding one library to a run must not produce rows measured at other thread counts
+        counts, why = run.resolve_workers(None, {"workers": [1, 2, 4, 8]})
+        self.assertEqual(counts, [1, 2, 4, 8])
+        self.assertIn("results file", why)
+
+    def test_otherwise_the_machine_decides(self):
+        counts, why = run.resolve_workers(None, {})
+        self.assertEqual(counts, worker.default_workers())
+        self.assertIn("cores", why)

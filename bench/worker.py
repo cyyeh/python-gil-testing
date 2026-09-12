@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import os
 import platform
 import statistics
 import sys
@@ -24,6 +25,35 @@ ALL_WORKLOADS: list[Workload] = workloads.WORKLOADS + lib_workloads.WORKLOADS
 ALL_BY_NAME = {spec.name: spec for spec in ALL_WORKLOADS}
 
 DEFAULT_REPEATS = 5  # timed repeats per (workload, thread count); override with --repeats
+MAX_LADDER = 6       # each extra thread count costs a full (config x workload x repeats) pass
+
+
+def usable_cpus() -> int:
+    """Cores this process may actually run on, not the ones the box happens to have."""
+    try:
+        return len(os.sched_getaffinity(0))  # honours taskset / cpuset pinning where it exists
+    except AttributeError:                   # macOS, Windows
+        return os.cpu_count() or 1
+
+
+def default_workers(ncpu: int | None = None) -> list[int]:
+    """Thread counts to measure on this machine: 1, doubling, up to the core count.
+
+    1 is always in it - every speed-up in the report is measured against it - and the top of
+    the ladder is the core count, because that is where a free-threaded build should stop
+    gaining. Past MAX_LADDER points the middle is thinned: run time grows linearly with the
+    ladder, while the two ends carry the finding.
+    """
+    n = max(1, ncpu if ncpu else usable_cpus())
+    ladder, w = [], 1
+    while w < n:
+        ladder.append(w)
+        w *= 2
+    ladder.append(n)
+    if len(ladder) > MAX_LADDER:  # keep both ends, spread the rest evenly across the doublings
+        keep = {round(i * (len(ladder) - 1) / (MAX_LADDER - 1)) for i in range(MAX_LADDER)}
+        ladder = [w for i, w in enumerate(ladder) if i in keep]
+    return ladder
 
 
 def stats(seconds: list[float]) -> dict:
@@ -129,7 +159,8 @@ def run_workload(spec: Workload, workers_list: list[int], repeats: int, kwargs: 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--workload", required=True, choices=sorted(ALL_BY_NAME))
-    ap.add_argument("--workers", default="1,2,4,8")
+    ap.add_argument("--workers", default=",".join(map(str, default_workers())),
+                    help="comma-separated thread counts (default: this machine's ladder)")
     ap.add_argument("--repeats", type=int, default=DEFAULT_REPEATS)
     ap.add_argument("--kwargs", default="{}", help="JSON dict of extra kwargs for the workload")
     args = ap.parse_args(argv)

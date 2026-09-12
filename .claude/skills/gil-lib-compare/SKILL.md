@@ -39,6 +39,14 @@ tell the user, then measure.**
 5. **Measure:** `python -m bench.compare_lib <pkg>` (add `--quick` first for a smoke run). It re-runs the
    check, warns, benchmarks only that library's workloads, merges into `results/results.json`,
    regenerates `results/report.html`, prints a summary.
+   - **Do not pass `--workers` unless the user asked for particular thread counts.** Left alone, the
+     harness picks them: the counts already in `results/results.json` when it is adding to an existing
+     run (so every row stays comparable), otherwise 1, doubling, up to this machine's usable core
+     count. It prints what it chose and why - quote that line rather than assuming `1,2,4,8`. Hard-coding
+     a ladder either measures past the cores (threads queueing, read as "free-threading stops scaling")
+     or stops short of them, and overriding it on an existing file leaves the report with gaps, which the
+     run warns about. Pass it only to honour an explicit request ("up to 32 threads"), and say so in the
+     write-up; `--fresh` re-measures everything at the new ladder.
    - Every cell is timed **5 times by default** (`--repeats N` to override; the worker records median,
      mean, sample stdev, min, max, cv). Keep the default unless the user asks; raise it (7-10) for
      workloads under ~50 ms, where scheduler noise dominates.
@@ -85,6 +93,7 @@ tell the user, then measure.**
 
 - Benchmarking before running `check_gil_support.py`, or burying the warning at the end.
 - Pinning nothing and attributing the library's own thread pool to free-threading.
+- Passing `--workers 1,2,4,8` out of habit on a machine that has 4 cores, or 64.
 - Timing the first call (lazy import, server start) - `warmup=True` exists for this.
 - Running the test suite on one interpreter only.
 - Presenting `PYTHON_GIL=0 forced` numbers as if the library supported free-threading.

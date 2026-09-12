@@ -101,7 +101,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--install", action="store_true", help="uv pip install the packages into both venvs first")
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--repeats", type=int, default=DEFAULT_REPEATS)
-    ap.add_argument("--workers", default="1,2,4,8")
+    ap.add_argument("--workers", default=None,
+                    help="comma-separated thread counts; default: the counts already in --out, "
+                         "else 1..cores on this machine")
     ap.add_argument("--out", default="results/results.json")
     ap.add_argument("--report", default="results/report.html")
     ap.add_argument("--py312", default=DEFAULT_PY312)
@@ -120,7 +122,9 @@ def main(argv: list[str] | None = None) -> int:
         return 3
 
     run_args = ["--packages", ",".join(sorted(covered)), "--out", args.out, "--repeats", str(args.repeats),
-                "--workers", args.workers, "--py312", args.py312, "--py314t", args.py314t]
+                "--py312", args.py312, "--py314t", args.py314t]
+    if args.workers:                      # otherwise bench.run picks: existing file, else this machine
+        run_args += ["--workers", args.workers]
     if args.quick:
         run_args.append("--quick")
     run.main(run_args)

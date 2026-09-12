@@ -28,6 +28,11 @@ The same file is mirrored at `.claude/skills/gil-lib-compare/SKILL.md` for Claud
 - Bare-Python benchmark: `.venv312/bin/python -m bench.run` (`--libs` adds the library tier,
   `--quick` for a smoke run, `--repeats N` to override the default of 5). Report:
   `.venv312/bin/python -m bench.report` -> `results/report.html`.
+- **Thread counts pick themselves; do not pass `--workers` unless asked.** The default is the ladder
+  already in `results/results.json` when adding to an existing run, otherwise 1, doubling, up to this
+  machine's usable cores (`bench.worker.default_workers`). The run prints the counts and why it chose
+  them. Only a user asking for specific thread counts justifies `--workers`, and on an existing file
+  that leaves gaps unless everything is re-run with `--fresh`.
 - **Never ship a report you have not verified.** `.venv312/bin/python -m bench.verify_report`
   recomputes every rendered number from the raw per-repeat timings and exits non-zero on a
   mismatch. It cannot read prose, so also check the page's hand-written text against the numbers
