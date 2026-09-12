@@ -174,10 +174,16 @@ class WarmupTest(unittest.TestCase):
 
 class CollectFactsTest(unittest.TestCase):
     def test_collect_facts_runs_in_the_configured_interpreter_and_env(self):
+        import platform
         import sys
         cfg = {"label": "x", "python": sys.executable, "env": {}}
         f = run.collect_facts(cfg)
-        self.assertEqual(f["version"], ".".join(map(str, sys.version_info[:3])))
+        # against platform.python_version(), the same source bench.facts reports from:
+        # version_info[:3] drops the release level, so on a pre-release interpreter it would
+        # compare "3.14.0rc2" with "3.14.0" and fail on a perfectly good build.
+        self.assertEqual(f["version"], platform.python_version())
+        # still pinned to this interpreter, whatever platform's formatting does
+        self.assertTrue(f["version"].startswith(".".join(map(str, sys.version_info[:3]))), f["version"])
         self.assertIn("sizeof", f)
 
 
