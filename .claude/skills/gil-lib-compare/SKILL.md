@@ -46,7 +46,29 @@ tell the user, then measure.**
      A noisy cell you want to cite: re-run that workload alone (`--only <workload> --repeats 10`) -
      a stdev that stays large is a real property (contention, GC pauses), say so instead of averaging it away.
    - Two medians whose min-max error bars overlap are **not** different; say "no measurable difference".
-6. **Report to the user:** the support status, then per workload the 1->8 speed-up on each configuration
+6. **Verify the regenerated report, and fix what it finds.** A benchmark report is only worth the
+   trust its weakest sentence earns, and the prose is hand-written while the numbers are not.
+   - `python -m bench.verify_report` recomputes every rendered number - table cells, chart vertices,
+     findings, the facts/config/support tables - from the raw per-repeat timings, without importing
+     the renderer. Non-zero exit means the page disagrees with the data: fix `bench/report.py` (or
+     re-run the benchmark), regenerate, run it again. Do not report results from a page that fails.
+   - It cannot read, so check the prose yourself against the numbers now on the page: the workload
+     description you wrote in step 3, the category blurb, the implementation-differences section,
+     the tooltips. Every claim about what a library does with the GIL must match its own chart -
+     "holds the GIL" above a line that scales 4.7x on 3.12 is a contradiction, and so is any
+     "each run does the same work" claim about a workload whose checksum moves with the thread
+     count (`verify_report` prints those).
+   - **If your runtime can spawn a subagent, give the reading to one**, with a fresh context and no
+     stake in the wording: point it at `results/report.html` and `results/results.json` and ask for
+     every sentence the data does not support, each with the number that contradicts it. An author
+     re-reading their own text sees what they meant, not what they wrote. Judge what comes back
+     against the data yourself - a subagent's finding is a lead, not a verdict.
+   - Fix prose in its source, never in the rendered file: workload text lives in the `Workload(...)`
+     description, page text in `bench/report.py`. `results/results.json` snapshots each description
+     at run time, so a corrected description also has to be updated there (or the benchmark re-run)
+     before it reaches the page. Then regenerate and re-verify.
+
+7. **Report to the user:** the support status, then per workload the 1->8 speed-up on each configuration
    and the 8-thread time **with its ± stdev**, the `[GIL re-enabled by import]` flag if present, the noise
    line from "Key findings", and `results/report.html`'s path.
 
@@ -67,3 +89,7 @@ tell the user, then measure.**
 - Running the test suite on one interpreter only.
 - Presenting `PYTHON_GIL=0 forced` numbers as if the library supported free-threading.
 - Quoting a single run, or a speed-up whose error bars overlap, as a finding.
+- Shipping the report without running `bench/verify_report.py`, or treating its silence on prose as
+  approval of the prose - it only checks numbers.
+- Leaving a workload description that the chart underneath it contradicts. Describe what the run
+  measured, not what the library was expected to do.

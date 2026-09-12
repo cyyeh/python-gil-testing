@@ -26,6 +26,13 @@ The same file is mirrored at `.claude/skills/gil-lib-compare/SKILL.md` for Claud
 - Bare-Python benchmark: `.venv312/bin/python -m bench.run` (`--libs` adds the library tier,
   `--quick` for a smoke run, `--repeats N` to override the default of 5). Report:
   `.venv312/bin/python -m bench.report` -> `results/report.html`.
+- **Never ship a report you have not verified.** `.venv312/bin/python -m bench.verify_report`
+  recomputes every rendered number from the raw per-repeat timings and exits non-zero on a
+  mismatch. It cannot read prose, so also check the page's hand-written text against the numbers
+  now on it - a description that contradicts the chart under it is the failure mode this repo
+  keeps hitting. Step 6 of the skill has the full loop, including handing the reading to a
+  subagent. Descriptions are snapshotted into `results/results.json` at run time: fixing one in
+  the registry also means updating it there (or re-running) before it reaches the page.
 - Tests: `.venv312/bin/python -m unittest discover -s tests` and again with `.venv314t`.
   Every workload must return an identical value at every thread count.
 - Code is stdlib-only except inside `bench/lib_workloads.py` (lazy imports there).

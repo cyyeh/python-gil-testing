@@ -20,4 +20,5 @@ done
 
 .venv312/bin/python -m bench.run --fresh $LIBS $QUICK
 .venv312/bin/python -m bench.report
+.venv312/bin/python -m bench.verify_report   # the page must say what the raw timings say
 echo "open results/report.html"

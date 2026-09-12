@@ -11,7 +11,8 @@ For each package this
      package re-enables the GIL or is missing (bench.run does this),
   3. benchmarks only those workloads on every interpreter configuration,
      merging into results/results.json,
-  4. regenerates results/report.html and prints a short summary.
+  4. regenerates results/report.html, checks that every number on it comes back out of the
+     raw timings (exit 4 if not), and prints a short summary.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from bench import report, run
+from bench import report, run, verify_report
 from bench.run import DEFAULT_PY312, DEFAULT_PY314T, DEFAULT_REPEATS
 from bench.report import FT, cell_stats, pivot, speedup, _fmt_s, _fmt_x
 from bench.worker import ALL_WORKLOADS
@@ -126,8 +127,19 @@ def main(argv: list[str] | None = None) -> int:
     report.main(["--in", args.out, "--out", args.report])
 
     doc = json.loads(Path(args.out).read_text())
+    # the page is the deliverable, so it is checked before it is handed over: every number on it
+    # has to come back out of the raw timings. Prose still needs a reader - see the skill.
+    problems, _ = verify_report.verify(doc, Path(args.report).read_text())
+    if problems:
+        print(f"\n!! {args.report} does not match {args.out} - do NOT report these numbers:", file=sys.stderr)
+        for p in problems[:10]:
+            print(f"   - {p}", file=sys.stderr)
+        print("   run `python -m bench.verify_report` for the full list", file=sys.stderr)
+
     print("\n" + summarize(doc, [s.name for s in selected]))
     print(f"\nreport: {Path(args.report).resolve()}")
+    if problems:
+        return 4
     unsupported = [pkg for pkg in covered
                    if doc.get("gil_support", {}).get(pkg, {}).get("status") in ("REENABLES_GIL", "NOT_INSTALLED")]
     return 1 if unsupported else 0

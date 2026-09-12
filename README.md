@@ -127,6 +127,7 @@ bench/worker.py            runs one workload at 1/2/4/8 threads inside one inter
 bench/run.py               drives every (config x workload) in its own subprocess -> results/results.json
 bench/facts.py             measured build facts (ABI tag, flags, object sizes) per interpreter
 bench/report.py            results.json -> results/report.html (inline SVG, no network)
+bench/verify_report.py     re-derives every number on the page from the raw timings (exit 1 on a mismatch)
 bench/compare_lib.py       one-command library comparison
 tests/                     unittest suite; run on BOTH interpreters
 ```
