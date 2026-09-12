@@ -322,9 +322,40 @@ def line_chart_svg(series: dict, xs: list, title: str, y_label: str = "median wa
 # --------------------------------------------------------------------------
 
 
-def _badge(kind: str, text: str) -> str:
+def tip(inner: str, explanation: str, cls: str = "abbr") -> str:
+    """Wrap a glyph/badge/abbreviation so it explains itself on hover, focus, or tap.
+
+    Rule for every HTML this repo generates: a symbol never stands alone - it carries a
+    ``data-tip`` (immediate, styled, touch-friendly; native ``title`` is delayed and
+    invisible on touch) and is keyboard-focusable.
+    """
+    return f'<span class="{cls} has-tip" tabindex="0" data-tip="{html.escape(explanation, quote=True)}">{inner}</span>'
+
+
+GIL_FLAG_TIP = ("GIL re-enabled: an extension module imported by this workload has not declared free-threading "
+                "support, so CPython turned the GIL back on for this run. This 'free-threaded' number is "
+                "effectively GIL-on; see the support table.")
+SPEEDUP_TIP = "1-thread median divided by the highest-thread-count median. Above 1 = faster with more threads; 1 = no scaling."
+GIL_AT_RUN_TIP = ("sys._is_gil_enabled() measured inside the benchmark process. It can differ from the build "
+                  "default: PYTHON_GIL=1 turns it on, and an extension without free-threading support turns it "
+                  "back on at import.")
+STATUS_TIPS = {
+    "SUPPORTED": "Imported on the free-threaded 3.14t interpreter; compiled extension modules were loaded and the GIL stayed off.",
+    "PURE_PYTHON": "No compiled extension modules: runs without the GIL automatically. Thread-safety of its own data structures is still the library's job.",
+    "REENABLES_GIL": "One of its extension modules lacks Py_MOD_GIL_NOT_USED, so CPython re-enabled the GIL for the whole process at import. Everything in that process, including other libraries, loses free-threading.",
+    "NOT_INSTALLED": "The import failed in the 3.14t environment (often: no cp314t wheel available).",
+    "UNKNOWN": "Could not determine: not probed on a free-threaded interpreter, or the GIL was already forced on.",
+}
+
+
+def _gil_flag() -> str:
+    return tip("&#9888;", GIL_FLAG_TIP, "flag")
+
+
+def _badge(kind: str, text: str, status: str = "") -> str:
     icon = {"good": "&#10003;", "warning": "?", "serious": "!", "critical": "&#10007;"}[kind]
-    return f'<span class="badge {kind}"><span class="badge-icon">{icon}</span>{html.escape(text)}</span>'
+    inner = f'<span class="badge-icon">{icon}</span>{html.escape(text)}'
+    return tip(inner, STATUS_TIPS.get(status, text), f"badge {kind}")
 
 
 def workload_table(by_config: dict, workers: list[int], configs: list[str]) -> str:
@@ -344,20 +375,24 @@ def workload_table(by_config: dict, workers: list[int], configs: list[str]) -> s
             elif rec.get("error"):
                 cells.append('<td class="err" title="see appendix">error</td>')
             else:
-                flag = ""
-                if c == FT and rec.get("gil_enabled"):
-                    flag = ' <span class="flag" title="GIL re-enabled by an extension module at import">&#9888;</span>'
+                flag = f" {_gil_flag()}" if c == FT and rec.get("gil_enabled") else ""
                 st = cell_stats(rec)
                 pm = ""
                 if st:
-                    noisy = f' <span class="noisy" title="coefficient of variation {st["cv"]:.0%} > {NOISY_CV:.0%}">~</span>' if st["cv"] > NOISY_CV else ""
-                    pm = (f'<span class="pm" title="{st["n"]} repeats: min {_fmt_s(st["min"])}, max {_fmt_s(st["max"])}, '
-                          f'cv {st["cv"]:.1%}">&plusmn;{_fmt_s(st["stdev"])}</span>{noisy}')
+                    noisy = ""
+                    if st["cv"] > NOISY_CV:
+                        noisy = " " + tip("~", f"Noisy cell: coefficient of variation {st['cv']:.0%} (stdev / mean) is above "
+                                               f"{NOISY_CV:.0%}. Differences smaller than this spread are not meaningful; "
+                                               f"re-run with more repeats (--repeats 10) to confirm.", "noisy")
+                    pm = tip(f"&plusmn;{_fmt_s(st['stdev'])}",
+                             f"{st['n']} timed repeats: median {_fmt_s(st['median'])}, mean {_fmt_s(st['mean'])}, "
+                             f"sample stdev {_fmt_s(st['stdev'])}, min {_fmt_s(st['min'])}, max {_fmt_s(st['max'])}, "
+                             f"cv {st['cv']:.1%}.", "pm") + noisy
                 cells.append(f"<td>{_fmt_s(rec['median'])} {pm}{flag}</td>")
         sp = speedup(bw)
         rows.append(f"<tr><th scope=\"row\"><span class=\"swatch s{configs.index(c) + 1}\"></span>{html.escape(c)}</th>"
                     + "".join(cells) + f"<td class=\"num\">{_fmt_x(sp)}</td></tr>")
-    return (f'<table class="data"><thead><tr><th>configuration</th>{head}<th>speed-up {workers[0]}&rarr;{workers[-1]}</th>'
+    return (f'<table class="data"><thead><tr><th>configuration</th>{head}<th>{tip(f"speed-up {workers[0]}&rarr;{workers[-1]}", SPEEDUP_TIP)}</th>'
             f"</tr></thead><tbody>{''.join(rows)}</tbody></table>"
             '<p class="muted small">median &plusmn; sample standard deviation over the timed repeats; '
             'hover a cell for min / max; ~ marks a noisy cell (cv &gt; 10%).</p>')
@@ -391,7 +426,7 @@ def _support_table(gil_support: dict) -> str:
         kind, label = STATUS_LABEL.get(e["status"], ("warning", e["status"]))
         rows.append(f"<tr><th scope=\"row\"><code>{html.escape(pkg)}</code></th><td>{html.escape(str(e.get('version') or '-'))}</td>"
                     f"<td><code>{html.escape(str(e.get('wheel_abi') or '-'))}</code></td>"
-                    f"<td>{_badge(kind, label)} <code class=\"muted\">{html.escape(e['status'])}</code></td>"
+                    f"<td>{_badge(kind, label, e['status'])} <code class=\"muted\">{html.escape(e['status'])}</code></td>"
                     f"<td class=\"detail\">{html.escape(e['detail'])}</td></tr>")
     return ('<h4>Free-threading support check (<code>check_gil_support.py</code>, probed on 3.14t)</h4>'
             '<table class="data support"><thead><tr><th>package</th><th>version</th><th>wheel ABI</th><th>status</th>'
@@ -412,13 +447,13 @@ def _summary_table(doc: dict, p: dict, configs: list[str]) -> str:
                 cells.append("<td>-</td>")
                 continue
             sp, t = speedup(bw), _median(bw, max_w)
-            flag = " &#9888;" if c == FT and bw.get(max_w, {}).get("gil_enabled") else ""
+            flag = f" {_gil_flag()}" if c == FT and bw.get(max_w, {}).get("gil_enabled") else ""
             cells.append(f'<td><strong>{_fmt_x(sp)}</strong> <span class="muted">{_fmt_s(t)}</span>{flag}</td>')
         rows.append(f'<tr><th scope="row"><a href="#w-{w["name"]}"><code>{w["name"]}</code></a> '
                     f'<span class="muted">{CATEGORY_TITLES.get(w["category"], w["category"])}</span></th>{"".join(cells)}</tr>')
     return (f'<table class="data summary"><thead><tr><th>workload</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table>'
-            f'<p class="muted small">Cells: speed-up from 1 to {max_w} workers, and wall time at {max_w} workers. '
-            f'&#9888; = the free-threaded run actually had the GIL re-enabled by an extension module.</p>')
+            f'<p class="muted small">Cells: {tip("speed-up", SPEEDUP_TIP)} from 1 to {max_w} workers, and wall time at {max_w} workers. '
+            f'{_gil_flag()} = the free-threaded run actually had the GIL re-enabled by an extension module (hover any symbol for its meaning).</p>')
 
 
 def _config_table(doc: dict) -> str:
@@ -430,8 +465,9 @@ def _config_table(doc: dict) -> str:
                     f"<td>{'yes' if info.get('gil_enabled', True) else 'no'}</td>"
                     f"<td><code>{html.escape(' '.join(f'{k}={v}' for k, v in c.get('env', {}).items() if k == 'PYTHON_GIL') or '-')}</code></td>"
                     f"<td class=\"detail\">{html.escape(c.get('note', ''))}</td></tr>")
-    return ('<table class="data"><thead><tr><th>label</th><th>version</th><th>free-threaded build</th>'
-            '<th>GIL enabled at run</th><th>env</th><th>note</th></tr></thead><tbody>' + "".join(rows) + "</tbody></table>")
+    return ('<table class="data"><thead><tr><th>label</th><th>version</th>'
+            f'<th>{tip("free-threaded build", "sysconfig.get_config_var(&quot;Py_GIL_DISABLED&quot;): was this binary built with --disable-gil (python3.14t)?")}</th>'
+            f'<th>{tip("GIL enabled at run", GIL_AT_RUN_TIP)}</th><th>env</th><th>note</th></tr></thead><tbody>' + "".join(rows) + "</tbody></table>")
 
 
 def _facts_table(doc: dict) -> str:
@@ -644,7 +680,11 @@ table.support td:nth-child(4) { white-space: nowrap; }
 .swatch.s1 { background: var(--s1); } .swatch.s2 { background: var(--s2); } .swatch.s3 { background: var(--s3); } .swatch.s4 { background: var(--s4); }
 .flag { color: var(--critical); }
 .pm { color: var(--text-3); font-size: 12px; font-variant-numeric: tabular-nums; }
-.noisy { color: var(--warning); font-weight: 700; cursor: help; }
+.noisy { color: var(--warning); font-weight: 700; }
+.has-tip { cursor: help; border-bottom: 1px dotted var(--text-3); outline-offset: 2px; }
+.has-tip.badge, .has-tip.flag, .has-tip.noisy { border-bottom: none; }
+.tip { position: fixed; z-index: 10; max-width: 340px; background: var(--surface); color: var(--text); border: 1px solid var(--line);
+       border-radius: 6px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; box-shadow: 0 4px 14px rgba(0,0,0,.18); pointer-events: none; }
 .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; padding: 1px 8px 1px 6px; border-radius: 999px; border: 1px solid currentColor; }
 .badge.good { color: var(--good); } .badge.warning { color: var(--warning); } .badge.serious { color: var(--serious); } .badge.critical { color: var(--critical); }
 .badge-icon { font-weight: 700; }
@@ -685,6 +725,27 @@ details { margin: 6px 0; } summary { cursor: pointer; color: var(--text-2); font
 """
 
 _JS = """
+(function () {
+  // Explanation tooltips: every element with data-tip shows it on hover, keyboard focus, or tap.
+  var tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; document.body.appendChild(tip);
+  function place(el) {
+    tip.textContent = el.getAttribute('data-tip'); tip.hidden = false;
+    var r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    var left = Math.min(Math.max(8, r.left), window.innerWidth - w - 8);
+    var top = r.bottom + 6; if (top + h > window.innerHeight - 8) top = r.top - h - 6;
+    tip.style.left = left + 'px'; tip.style.top = Math.max(8, top) + 'px';
+  }
+  function hide() { tip.hidden = true; }
+  document.querySelectorAll('[data-tip]').forEach(function (el) {
+    el.addEventListener('pointerenter', function () { place(el); });
+    el.addEventListener('pointerleave', hide);
+    el.addEventListener('focus', function () { place(el); });
+    el.addEventListener('blur', hide);
+    el.addEventListener('click', function (ev) { if (tip.hidden) place(el); else hide(); ev.stopPropagation(); });
+  });
+  document.addEventListener('click', hide);
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') hide(); });
+})();
 (function () {
   var colors = ['--s1', '--s2', '--s3', '--s4'];
   document.querySelectorAll('.chart-wrap').forEach(function (wrap) {

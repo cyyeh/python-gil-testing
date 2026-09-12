@@ -30,3 +30,13 @@ The same file is mirrored at `.claude/skills/gil-lib-compare/SKILL.md` for Claud
   Every workload must return an identical value at every thread count.
 - Code is stdlib-only except inside `bench/lib_workloads.py` (lazy imports there).
 - Do not cite a single run or a difference smaller than its error bars as a finding.
+
+## Rule for any HTML this repo generates
+
+A symbol never stands alone. Every glyph, badge, flag, abbreviation or marker
+(`~`, `⚠`, `±`, status badges, column headers such as "speed-up") must explain itself
+on hover, keyboard focus and tap: wrap it with `bench.report.tip(inner, explanation, cls)`,
+which emits `data-tip` + `tabindex="0"` and is styled/handled by the page's own
+tooltip runtime. Do not use the native `title` attribute (delayed, unstyled, invisible on
+touch). `tests/test_report.py::HoverExplanationTest` enforces this on the rendered page;
+extend `GLYPH_CLASSES` there when you introduce a new kind of marker.

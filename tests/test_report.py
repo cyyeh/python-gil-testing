@@ -97,7 +97,7 @@ class StatsInReportTest(unittest.TestCase):
         by_config = {"3.12": {1: rec("3.12", "w", 1, 1.0, spread=0.30), 8: rec("3.12", "w", 8, 0.5)}}
         html = report.workload_table(by_config, [1, 8], ["3.12"])
         self.assertIn("&plusmn;", html)
-        self.assertIn('class="noisy"', html)
+        self.assertIn('class="noisy ', html)
 
     def test_key_findings_include_a_noise_summary(self):
         text = " ".join(report.key_findings(make_doc()))
@@ -175,3 +175,36 @@ class MainTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HoverExplanationTest(unittest.TestCase):
+    """Rule: every glyph, badge, flag or abbreviation in generated HTML explains itself on hover/focus."""
+
+    GLYPH_CLASSES = ("flag", "noisy", "pm", "badge", "abbr")
+
+    def test_every_glyph_has_a_data_tip_and_is_focusable(self):
+        import re
+        html = report.render_html(make_doc(with_libs=True))
+        tags = re.findall(r"<span[^>]*>", html)
+        glyphs = [t for t in tags if re.search(r'class="(?:[^"]*\s)?(%s)(?=[\s"])' % "|".join(self.GLYPH_CLASSES), t)]
+        self.assertGreater(len(glyphs), 5)
+        for t in glyphs:
+            self.assertIn('data-tip="', t, t)
+            self.assertIn('tabindex="0"', t, t)
+            self.assertNotIn(" title=", t, t)  # native tooltips are delayed and invisible on touch
+
+    def test_summary_table_gil_flag_is_explained(self):
+        html = report.render_html(make_doc(with_libs=True))
+        summary = html[html.index('<table class="data summary">'):html.index("</table>", html.index('<table class="data summary">'))]
+        self.assertIn("&#9888;", summary)
+        self.assertIn('data-tip="GIL re-enabled', summary)
+
+    def test_speedup_and_gil_column_headers_are_explained(self):
+        html = report.render_html(make_doc())
+        self.assertRegex(html, r'<th[^>]*>\s*<span class="abbr[^>]*data-tip="[^"]*1-thread[^"]*"[^>]*>speed-up')
+        self.assertRegex(html, r'data-tip="[^"]*_is_gil_enabled[^"]*"[^>]*>GIL enabled at run')
+
+    def test_page_ships_the_tooltip_runtime(self):
+        html = report.render_html(make_doc())
+        self.assertIn("querySelectorAll('[data-tip]')", html)  # the handler
+        self.assertIn(".tip {", html)  # its styling
