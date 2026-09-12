@@ -31,12 +31,33 @@ The same file is mirrored at `.claude/skills/gil-lib-compare/SKILL.md` for Claud
 - Code is stdlib-only except inside `bench/lib_workloads.py` (lazy imports there).
 - Do not cite a single run or a difference smaller than its error bars as a finding.
 
-## Rule for any HTML this repo generates
+## Rules for any HTML this repo generates
 
-A symbol never stands alone. Every glyph, badge, flag, abbreviation or marker
+### A symbol never stands alone
+
+Every glyph, badge, flag, abbreviation or marker
 (`~`, `⚠`, `±`, status badges, column headers such as "speed-up") must explain itself
 on hover, keyboard focus and tap: wrap it with `bench.report.tip(inner, explanation, cls)`,
 which emits `data-tip` + `tabindex="0"` and is styled/handled by the page's own
 tooltip runtime. Do not use the native `title` attribute (delayed, unstyled, invisible on
 touch). `tests/test_report.py::HoverExplanationTest` enforces this on the rendered page;
 extend `GLYPH_CLASSES` there when you introduce a new kind of marker.
+
+### The page reads on a phone
+
+The page itself never scrolls sideways, at any width down to 320px.
+
+- **Tables** go through `bench.report._scroll(...)`. Cells stay on one line (only `.detail`
+  columns wrap) and the table scrolls inside its own container, with the first column pinned
+  and configuration labels abbreviated (`_config_label`) on narrow screens.
+- **Charts** go through `bench.report.chart_block(...)`, which renders every chart twice:
+  `WIDE` for pointer-sized screens and `NARROW` with its own margins, fonts and markers for
+  phones; the stylesheet shows exactly one. Do not replace this with a single scaled SVG -
+  a 680px viewBox at phone width renders its 11px type at ~5px, and CSS can restyle SVG text
+  but not re-place it.
+- **Touch** is a first-class pointer: a tap must open a tip and a second tap close it (the
+  hover handlers sit out `pointerType === 'touch'`), and the chart readout survives the
+  finger lifting.
+
+`tests/test_report.py::MobileResponsiveTest` enforces the structure; check any visual change
+at ~375px wide as well as on a desktop viewport.

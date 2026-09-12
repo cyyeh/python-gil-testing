@@ -177,6 +177,74 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class MobileResponsiveTest(unittest.TestCase):
+    """The report is read on phones too: nothing may force the page itself to scroll sideways."""
+
+    def test_page_declares_the_device_viewport(self):
+        self.assertIn('name="viewport" content="width=device-width, initial-scale=1"',
+                      report.render_html(make_doc()))
+
+    def test_every_data_table_sits_in_its_own_scroll_container(self):
+        import re
+        html = report.render_html(make_doc(with_libs=True))
+        opens = [m.start() for m in re.finditer(r'<table class="data', html)]
+        self.assertGreater(len(opens), 3)
+        for i in opens:  # a wide table scrolls inside the page instead of widening it
+            self.assertIn("table-scroll", html[max(0, i - 60):i], html[max(0, i - 60):i + 40])
+
+    def test_each_chart_ships_a_wide_and_a_narrow_rendering(self):
+        html = report.render_html(make_doc())
+        wraps = html.count('class="chart-wrap"')
+        self.assertGreater(wraps, 0)
+        self.assertEqual(html.count('<svg class="chart wide"'), wraps)
+        self.assertEqual(html.count('<svg class="chart narrow"'), wraps)
+        self.assertIn("svg.chart.narrow { display: block; }", html)  # …and CSS picks one
+
+    def test_the_narrow_chart_is_laid_out_for_the_phone_not_merely_scaled_down(self):
+        series, xs = {"A": {1: 1.0, 2: 0.5}}, [1, 2]
+        wide = report.line_chart_svg(series, xs, "t", geom=report.WIDE)
+        narrow = report.line_chart_svg(series, xs, "t", geom=report.NARROW)
+        self.assertLess(report.NARROW["W"], report.WIDE["W"] * 0.6)
+        # the wide variant spends a right margin on end labels; the narrow one cannot afford it
+        self.assertIn("end-label", wide)
+        self.assertNotIn("end-label", narrow)
+        # and every rendering scales with its container rather than fixing a pixel width
+        for svg in (wide, narrow):
+            self.assertIn("viewBox=", svg)
+            self.assertNotIn(" width=\"", svg.split(">")[0])
+
+    def test_both_chart_renderings_carry_their_own_x_positions_for_the_runtime(self):
+        html = report.render_html(make_doc())
+        self.assertEqual(html.count("<svg class=\"chart"), html.count("data-xpos="))
+        self.assertIn("querySelectorAll('svg.chart')", html)  # the runtime wires each of them
+
+    def test_stylesheet_carries_phone_breakpoints(self):
+        self.assertRegex(report.render_html(make_doc()), r"@media \(max-width: \d+px\)")
+
+    def test_configuration_labels_have_a_short_form_that_still_explains_itself(self):
+        import re
+        html = report.render_html(make_doc())
+        m = re.search(r'<span class="only-narrow">(.*?)</span></span>', html)
+        self.assertIsNotNone(m, "no abbreviated configuration label for narrow screens")
+        self.assertIn('data-tip="', m.group(1))
+
+    def test_skipped_and_error_cells_explain_themselves_without_native_titles(self):
+        by_config = {"3.12": {1: rec("3.12", "w", 1, 1.0, skipped="numpy is not installed"),
+                              8: rec("3.12", "w", 8, 1.0, error="boom")}}
+        html = report.workload_table(by_config, [1, 8], ["3.12"])
+        self.assertNotIn(" title=", html)  # native tooltips never appear on a touch screen
+        self.assertIn('data-tip="Not measured: numpy is not installed"', html)
+
+    def test_no_native_tooltips_anywhere_on_the_page(self):
+        self.assertNotIn(" title=", report.render_html(make_doc(with_libs=True)))
+
+    def test_tooltip_runtime_distinguishes_touch_from_hover(self):
+        # a tap fires pointerenter/focus as well, so hover handlers must sit out touch events
+        # or the tip would close in the same tap that opened it
+        html = report.render_html(make_doc())
+        self.assertIn("pointerType !== 'touch'", html)
+
+
 class HoverExplanationTest(unittest.TestCase):
     """Rule: every glyph, badge, flag or abbreviation in generated HTML explains itself on hover/focus."""
 
