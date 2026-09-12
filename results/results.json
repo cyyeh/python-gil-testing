@@ -1,0 +1,3148 @@
+{
+ "generated_at": "2026-09-12T12:25:20",
+ "host": {
+  "os": "macOS-26.6.2-arm64-arm-64bit",
+  "machine": "arm64",
+  "cpu": "Apple M5",
+  "ncpu": 10
+ },
+ "workers": [
+  1,
+  2,
+  4,
+  8
+ ],
+ "repeats": 3,
+ "quick": false,
+ "configs": [
+  {
+   "label": "3.12",
+   "python": "/Users/cyyeh/Desktop/python-gil-testing/.venv312/bin/python",
+   "env": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1"
+   },
+   "note": "Stock CPython 3.12 (GIL). Baseline.",
+   "info": {
+    "version": "3.12.13",
+    "implementation": "CPython",
+    "executable": "/Users/cyyeh/Desktop/python-gil-testing/.venv312/bin/python",
+    "free_threaded_build": false,
+    "gil_enabled": true,
+    "platform": "macOS-26.6.2-arm64-arm-64bit"
+   },
+   "stderr": {},
+   "facts": {
+    "version": "3.12.13",
+    "version_string": "3.12.13 (main, Jun 23 2026, 15:44:24) [Clang 22.1.3 ]",
+    "abiflags": "",
+    "soabi": "cpython-312-darwin",
+    "free_threaded_build": false,
+    "gil_enabled": true,
+    "gil_flag": null,
+    "thread_inherit_context": null,
+    "context_aware_warnings": null,
+    "jit_available": null,
+    "gc_threshold": [
+     700,
+     10,
+     10
+    ],
+    "sizeof": {
+     "object()": 16,
+     "1": 28,
+     "2**40": 32,
+     "\"abc\"": 44,
+     "(1, 2)": 56,
+     "[]": 56,
+     "{}": 64,
+     "set()": 216,
+     "class instance": 48,
+     "__slots__ instance": 48,
+     "lambda": 160
+    },
+    "compiler": "Clang 22.1.3 "
+   }
+  },
+  {
+   "label": "3.14 (GIL on)",
+   "python": "/Users/cyyeh/Desktop/python-gil-testing/.venv314t/bin/python",
+   "env": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "PYTHON_GIL": "1"
+   },
+   "note": "Free-threaded 3.14 binary run with PYTHON_GIL=1: same code paths, GIL re-enabled.",
+   "info": {
+    "version": "3.14.6",
+    "implementation": "CPython",
+    "executable": "/Users/cyyeh/Desktop/python-gil-testing/.venv314t/bin/python",
+    "free_threaded_build": true,
+    "gil_enabled": true,
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O"
+   },
+   "stderr": {},
+   "facts": {
+    "version": "3.14.6",
+    "version_string": "3.14.6 free-threading build (main, Jun 23 2026, 15:54:43) [Clang 22.1.3 ]",
+    "abiflags": "t",
+    "soabi": "cpython-314t-darwin",
+    "free_threaded_build": true,
+    "gil_enabled": true,
+    "gil_flag": 1,
+    "thread_inherit_context": 1,
+    "context_aware_warnings": 1,
+    "jit_available": false,
+    "gc_threshold": [
+     2000,
+     10,
+     10
+    ],
+    "sizeof": {
+     "object()": 32,
+     "1": 44,
+     "2**40": 48,
+     "\"abc\"": 60,
+     "(1, 2)": 64,
+     "[]": 56,
+     "{}": 64,
+     "set()": 216,
+     "class instance": 48,
+     "__slots__ instance": 48,
+     "lambda": 168
+    },
+    "compiler": "Clang 22.1.3 "
+   }
+  },
+  {
+   "label": "3.14t (free-threaded)",
+   "python": "/Users/cyyeh/Desktop/python-gil-testing/.venv314t/bin/python",
+   "env": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1"
+   },
+   "note": "Free-threaded 3.14 binary, GIL disabled (default for this build).",
+   "info": {
+    "version": "3.14.6",
+    "implementation": "CPython",
+    "executable": "/Users/cyyeh/Desktop/python-gil-testing/.venv314t/bin/python",
+    "free_threaded_build": true,
+    "gil_enabled": false,
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O"
+   },
+   "stderr": {
+    "duckdb_query": "<frozen importlib._bootstrap>:491: RuntimeWarning: The global interpreter lock (GIL) has been enabled to load module '_duckdb', which has not declared that it can run safely without the GIL. To override this behavior and keep the GIL disabled (at your own risk), run with PYTHON_GIL=0 or -Xgil=0."
+   },
+   "facts": {
+    "version": "3.14.6",
+    "version_string": "3.14.6 free-threading build (main, Jun 23 2026, 15:54:43) [Clang 22.1.3 ]",
+    "abiflags": "t",
+    "soabi": "cpython-314t-darwin",
+    "free_threaded_build": true,
+    "gil_enabled": false,
+    "gil_flag": null,
+    "thread_inherit_context": 1,
+    "context_aware_warnings": 1,
+    "jit_available": false,
+    "gc_threshold": [
+     2000,
+     10,
+     10
+    ],
+    "sizeof": {
+     "object()": 32,
+     "1": 44,
+     "2**40": 48,
+     "\"abc\"": 60,
+     "(1, 2)": 64,
+     "[]": 56,
+     "{}": 64,
+     "set()": 216,
+     "class instance": 48,
+     "__slots__ instance": 48,
+     "lambda": 168
+    },
+    "compiler": "Clang 22.1.3 "
+   }
+  },
+  {
+   "label": "3.14t (PYTHON_GIL=0 forced)",
+   "python": "/Users/cyyeh/Desktop/python-gil-testing/.venv314t/bin/python",
+   "env": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "PYTHON_GIL": "0"
+   },
+   "note": "GIL forced off even for extension modules that do not declare free-threading support. Unsupported by those libraries; shown for comparison only.",
+   "only_workloads": [
+    "duckdb_query"
+   ],
+   "info": {
+    "version": "3.14.6",
+    "implementation": "CPython",
+    "executable": "/Users/cyyeh/Desktop/python-gil-testing/.venv314t/bin/python",
+    "free_threaded_build": true,
+    "gil_enabled": false,
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O"
+   },
+   "stderr": {},
+   "facts": {
+    "version": "3.14.6",
+    "version_string": "3.14.6 free-threading build (main, Jun 23 2026, 15:54:43) [Clang 22.1.3 ]",
+    "abiflags": "t",
+    "soabi": "cpython-314t-darwin",
+    "free_threaded_build": true,
+    "gil_enabled": false,
+    "gil_flag": 0,
+    "thread_inherit_context": 1,
+    "context_aware_warnings": 1,
+    "jit_available": false,
+    "gc_threshold": [
+     2000,
+     10,
+     10
+    ],
+    "sizeof": {
+     "object()": 32,
+     "1": 44,
+     "2**40": 48,
+     "\"abc\"": 60,
+     "(1, 2)": 64,
+     "[]": 56,
+     "{}": 64,
+     "set()": 216,
+     "class instance": 48,
+     "__slots__ instance": 48,
+     "lambda": 168
+    },
+    "compiler": "Clang 22.1.3 "
+   }
+  }
+ ],
+ "workloads": [
+  {
+   "name": "cpu_primes",
+   "category": "cpu",
+   "description": "Trial-division prime counting below 300k, range split across threads. Pure bytecode: integer arithmetic and loops, no I/O.",
+   "requires": []
+  },
+  {
+   "name": "cpu_float",
+   "category": "cpu",
+   "description": "3M iterations of sin*cos accumulation, range split across threads. Float-heavy bytecode with C-level math calls.",
+   "requires": []
+  },
+  {
+   "name": "io_sleep",
+   "category": "io",
+   "description": "Each thread performs 20 x 10ms sleeps (simulated network/disk waits). The GIL is released while sleeping, so all builds should overlap waits.",
+   "requires": []
+  },
+  {
+   "name": "contended_list_append",
+   "category": "contended",
+   "description": "4M appends to one shared list, split across threads. On free-threaded builds each append takes the list's per-object critical section, so more threads means more lock hand-offs.",
+   "requires": []
+  },
+  {
+   "name": "contended_dict_update",
+   "category": "contended",
+   "description": "2M dict increments guarded by one threading.Lock, split across threads. Measures lock hand-off cost when the GIL is not serialising threads.",
+   "requires": []
+  },
+  {
+   "name": "mp_primes",
+   "category": "multiprocessing",
+   "description": "Same prime counting as cpu_primes, but using a multiprocessing.Pool (spawn). The classic GIL workaround; includes process start-up cost.",
+   "requires": []
+  },
+  {
+   "name": "numpy_small_ops",
+   "category": "library",
+   "description": "8 tasks x 20k tiny (256-element) array ops. Python dispatch overhead dominates and holds the GIL, so GIL builds should not scale.",
+   "requires": [
+    "numpy"
+   ]
+  },
+  {
+   "name": "numpy_matmul",
+   "category": "library",
+   "description": "8 tasks x 8 matmuls of 512x512 float64 (BLAS threads pinned to 1). numpy releases the GIL inside BLAS, so all builds should scale.",
+   "requires": [
+    "numpy"
+   ]
+  },
+  {
+   "name": "pandas_groupby",
+   "category": "library",
+   "description": "8 tasks: build a 1M-row DataFrame and groupby-sum. pandas holds the GIL for most of its Cython/Python code.",
+   "requires": [
+    "numpy",
+    "pandas"
+   ]
+  },
+  {
+   "name": "duckdb_query",
+   "category": "library",
+   "description": "8 tasks: SELECT sum(i*i) FROM range(5M) on a per-task connection with SET threads=1. DuckDB releases the GIL during execution. NOTE: importing duckdb re-enables the GIL on free-threaded builds unless PYTHON_GIL=0 is forced.",
+   "requires": [
+    "duckdb"
+   ]
+  },
+  {
+   "name": "sklearn_fit",
+   "category": "library",
+   "description": "8 tasks: make_classification(4000x20) + RandomForestClassifier(20 trees, n_jobs=1).fit + predict. Cython tree building releases the GIL in hot loops.",
+   "requires": [
+    "sklearn"
+   ]
+  },
+  {
+   "name": "fastapi_sync_cpu",
+   "category": "library",
+   "description": "32 requests to a sync def endpoint (prime count to 30k) from N concurrent clients; uvicorn runs in a subprocess on the same interpreter. def endpoints run on a thread pool, so free-threading can parallelise them.",
+   "requires": [
+    "fastapi",
+    "uvicorn"
+   ]
+  },
+  {
+   "name": "fastapi_async_json",
+   "category": "library",
+   "description": "400 requests to a trivial async endpoint from N concurrent clients. Event-loop bound; measures per-request overhead of each build.",
+   "requires": [
+    "fastapi",
+    "uvicorn"
+   ]
+  }
+ ],
+ "gil_support": {
+  "duckdb": {
+   "status": "REENABLES_GIL",
+   "detail": "'_duckdb' has not declared Py_MOD_GIL_NOT_USED, so CPython re-enabled the GIL for the whole process (override with PYTHON_GIL=0 at your own risk)",
+   "version": "1.5.5",
+   "wheel_abi": "cp314t",
+   "reenabled_by": "_duckdb",
+   "extension_modules": [
+    "_duckdb"
+   ]
+  },
+  "fastapi": {
+   "status": "SUPPORTED",
+   "detail": "1 extension module(s) loaded, GIL stayed off",
+   "version": "0.141.1",
+   "wheel_abi": "pure (none-any)",
+   "reenabled_by": null,
+   "extension_modules": [
+    "pydantic_core._pydantic_core"
+   ]
+  },
+  "numpy": {
+   "status": "SUPPORTED",
+   "detail": "2 extension module(s) loaded, GIL stayed off",
+   "version": "2.5.3",
+   "wheel_abi": "cp314t",
+   "reenabled_by": null,
+   "extension_modules": [
+    "numpy._core._multiarray_umath",
+    "numpy.linalg._umath_linalg"
+   ]
+  },
+  "pandas": {
+   "status": "SUPPORTED",
+   "detail": "55 extension module(s) loaded, GIL stayed off",
+   "version": "3.0.5",
+   "wheel_abi": "cp314t",
+   "reenabled_by": null,
+   "extension_modules": [
+    "_cyutility",
+    "numpy._core._multiarray_umath",
+    "numpy.linalg._umath_linalg",
+    "numpy.random._bounded_integers",
+    "numpy.random._common",
+    "numpy.random._generator",
+    "numpy.random._mt19937",
+    "numpy.random._pcg64",
+    "numpy.random._philox",
+    "numpy.random._sfc64",
+    "numpy.random.bit_generator",
+    "numpy.random.mtrand",
+    "pandas._libs._cyutility",
+    "pandas._libs.algos",
+    "pandas._libs.arrays",
+    "pandas._libs.groupby",
+    "pandas._libs.hashing",
+    "pandas._libs.hashtable",
+    "pandas._libs.index",
+    "pandas._libs.indexing",
+    "pandas._libs.internals",
+    "pandas._libs.interval",
+    "pandas._libs.join",
+    "pandas._libs.json",
+    "pandas._libs.lib",
+    "pandas._libs.missing",
+    "pandas._libs.ops",
+    "pandas._libs.ops_dispatch",
+    "pandas._libs.pandas_datetime",
+    "pandas._libs.pandas_parser",
+    "pandas._libs.parsers",
+    "pandas._libs.properties",
+    "pandas._libs.reshape",
+    "pandas._libs.sparse",
+    "pandas._libs.testing",
+    "pandas._libs.tslib",
+    "pandas._libs.tslibs.base",
+    "pandas._libs.tslibs.ccalendar",
+    "pandas._libs.tslibs.conversion",
+    "pandas._libs.tslibs.dtypes",
+    "pandas._libs.tslibs.fields",
+    "pandas._libs.tslibs.nattype",
+    "pandas._libs.tslibs.np_datetime",
+    "pandas._libs.tslibs.offsets",
+    "pandas._libs.tslibs.parsing",
+    "pandas._libs.tslibs.period",
+    "pandas._libs.tslibs.strptime",
+    "pandas._libs.tslibs.timedeltas",
+    "pandas._libs.tslibs.timestamps",
+    "pandas._libs.tslibs.timezones",
+    "pandas._libs.tslibs.tzconversion",
+    "pandas._libs.tslibs.vectorized",
+    "pandas._libs.window.aggregations",
+    "pandas._libs.window.indexers",
+    "pandas._libs.writers"
+   ]
+  },
+  "sklearn": {
+   "status": "SUPPORTED",
+   "detail": "145 extension module(s) loaded, GIL stayed off",
+   "version": "1.9.1",
+   "wheel_abi": "cp314t",
+   "reenabled_by": null,
+   "extension_modules": [
+    "_csparsetools",
+    "_cyutility",
+    "_moduleTNC",
+    "_ni_label",
+    "numpy._core._multiarray_umath",
+    "numpy.fft._pocketfft_umath",
+    "numpy.linalg._umath_linalg",
+    "numpy.random._bounded_integers",
+    "numpy.random._common",
+    "numpy.random._generator",
+    "numpy.random._mt19937",
+    "numpy.random._pcg64",
+    "numpy.random._philox",
+    "numpy.random._sfc64",
+    "numpy.random.bit_generator",
+    "numpy.random.mtrand",
+    "pandas._libs._cyutility",
+    "pandas._libs.algos",
+    "pandas._libs.arrays",
+    "pandas._libs.groupby",
+    "pandas._libs.hashing",
+    "pandas._libs.hashtable",
+    "pandas._libs.index",
+    "pandas._libs.indexing",
+    "pandas._libs.internals",
+    "pandas._libs.interval",
+    "pandas._libs.join",
+    "pandas._libs.json",
+    "pandas._libs.lib",
+    "pandas._libs.missing",
+    "pandas._libs.ops",
+    "pandas._libs.ops_dispatch",
+    "pandas._libs.pandas_datetime",
+    "pandas._libs.pandas_parser",
+    "pandas._libs.parsers",
+    "pandas._libs.properties",
+    "pandas._libs.reshape",
+    "pandas._libs.sparse",
+    "pandas._libs.testing",
+    "pandas._libs.tslib",
+    "pandas._libs.tslibs.base",
+    "pandas._libs.tslibs.ccalendar",
+    "pandas._libs.tslibs.conversion",
+    "pandas._libs.tslibs.dtypes",
+    "pandas._libs.tslibs.fields",
+    "pandas._libs.tslibs.nattype",
+    "pandas._libs.tslibs.np_datetime",
+    "pandas._libs.tslibs.offsets",
+    "pandas._libs.tslibs.parsing",
+    "pandas._libs.tslibs.period",
+    "pandas._libs.tslibs.strptime",
+    "pandas._libs.tslibs.timedeltas",
+    "pandas._libs.tslibs.timestamps",
+    "pandas._libs.tslibs.timezones",
+    "pandas._libs.tslibs.tzconversion",
+    "pandas._libs.tslibs.vectorized",
+    "pandas._libs.window.aggregations",
+    "pandas._libs.window.indexers",
+    "pandas._libs.writers",
+    "scipy._cyutility",
+    "scipy._lib._ccallback_c",
+    "scipy._lib._uarray._uarray",
+    "scipy._lib.messagestream",
+    "scipy.fft._duccfft.pyduccfft",
+    "scipy.integrate._dop",
+    "scipy.integrate._odepack",
+    "scipy.integrate._quadpack",
+    "scipy.integrate._vode",
+    "scipy.interpolate._dierckx",
+    "scipy.interpolate._fitpack",
+    "scipy.interpolate._interpnd",
+    "scipy.interpolate._ppoly",
+    "scipy.interpolate._rbfinterp_pythran",
+    "scipy.interpolate._rgi_cython",
+    "scipy.linalg._batched_linalg",
+    "scipy.linalg._cythonized_array_utils",
+    "scipy.linalg._decomp_interpolative",
+    "scipy.linalg._decomp_update",
+    "scipy.linalg._fblas",
+    "scipy.linalg._flapack",
+    "scipy.linalg._internal_matfuncs",
+    "scipy.linalg._linalg_pythran",
+    "scipy.linalg._solve_toeplitz",
+    "scipy.linalg.cython_blas",
+    "scipy.linalg.cython_lapack",
+    "scipy.ndimage._nd_image",
+    "scipy.ndimage._ni_label",
+    "scipy.ndimage._rank_filter_1d",
+    "scipy.optimize._bglu_dense",
+    "scipy.optimize._direct",
+    "scipy.optimize._group_columns",
+    "scipy.optimize._highspy._core",
+    "scipy.optimize._highspy._highs_options",
+    "scipy.optimize._lbfgsb",
+    "scipy.optimize._lsap",
+    "scipy.optimize._lsq.givens_elimination",
+    "scipy.optimize._minpack",
+    "scipy.optimize._moduleTNC",
+    "scipy.optimize._pava_pybind",
+    "scipy.optimize._slsqplib",
+    "scipy.optimize._trlib._trlib",
+    "scipy.optimize._zeros",
+    "scipy.sparse._csparsetools",
+    "scipy.sparse._sparsetools",
+    "scipy.sparse.csgraph._flow",
+    "scipy.sparse.csgraph._matching",
+    "scipy.sparse.csgraph._min_spanning_tree",
+    "scipy.sparse.csgraph._reordering",
+    "scipy.sparse.csgraph._shortest_path",
+    "scipy.sparse.csgraph._tools",
+    "scipy.sparse.csgraph._traversal",
+    "scipy.sparse.linalg._dsolve._superlu",
+    "scipy.sparse.linalg._eigen.arpack._arpacklib",
+    "scipy.sparse.linalg._propack",
+    "scipy.spatial._ckdtree",
+    "scipy.spatial._distance_pybind",
+    "scipy.spatial._distance_wrap",
+    "scipy.spatial._hausdorff",
+    "scipy.spatial._qhull",
+    "scipy.spatial._voronoi",
+    "scipy.spatial.transform._rigid_transform_cy",
+    "scipy.spatial.transform._rotation_cy",
+    "scipy.special._comb",
+    "scipy.special._ellip_harm_2",
+    "scipy.special._gufuncs",
+    "scipy.special._specfun",
+    "scipy.special._special_ufuncs",
+    "scipy.special._ufuncs",
+    "scipy.special._ufuncs_cxx",
+    "scipy.special.cython_special",
+    "scipy.stats._ansari_swilk_statistics",
+    "scipy.stats._biasedurn",
+    "scipy.stats._levy_stable.levyst",
+    "scipy.stats._qmc_cy",
+    "scipy.stats._qmvnt_cy",
+    "scipy.stats._rcont.rcont",
+    "scipy.stats._sobol",
+    "scipy.stats._stats",
+    "scipy.stats._stats_pythran",
+    "sklearn.__check_build._check_build",
+    "sklearn._cyutility",
+    "sklearn.utils._isfinite",
+    "sklearn.utils._openmp_helpers",
+    "sklearn.utils.murmurhash",
+    "sklearn.utils.sparsefuncs_fast"
+   ]
+  },
+  "uvicorn": {
+   "status": "PURE_PYTHON",
+   "detail": "no compiled extension modules were loaded",
+   "version": "0.52.4",
+   "wheel_abi": "pure (none-any)",
+   "reenabled_by": null,
+   "extension_modules": []
+  }
+ },
+ "records": [
+  {
+   "config": "3.12",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 1,
+   "seconds": [
+    0.2941115000285208,
+    0.2844485000241548,
+    0.2572265829658136
+   ],
+   "median": 0.2844485000241548,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 2,
+   "seconds": [
+    0.26840349996928126,
+    0.2795987919671461,
+    0.2742904999759048
+   ],
+   "median": 0.2742904999759048,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 4,
+   "seconds": [
+    0.28765370906330645,
+    0.2764882920309901,
+    0.25967599998693913
+   ],
+   "median": 0.2764882920309901,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 8,
+   "seconds": [
+    0.2662244589300826,
+    0.2751367499586195,
+    0.2704094999935478
+   ],
+   "median": 0.2704094999935478,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 1,
+   "seconds": [
+    0.3430089589674026,
+    0.3687284999759868,
+    0.33850887499284
+   ],
+   "median": 0.3430089589674026,
+   "result": "-689.910548323669",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 2,
+   "seconds": [
+    0.3392615000484511,
+    0.3451411670539528,
+    0.34139541699551046
+   ],
+   "median": 0.34139541699551046,
+   "result": "-689.9105483237294",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 4,
+   "seconds": [
+    0.3493009170051664,
+    0.3299694579327479,
+    0.33766633400227875
+   ],
+   "median": 0.33766633400227875,
+   "result": "-689.9105483236685",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 8,
+   "seconds": [
+    0.3422997910529375,
+    0.34472591697704047,
+    0.33605945901945233
+   ],
+   "median": 0.3422997910529375,
+   "result": "-689.9105483236644",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 1,
+   "seconds": [
+    0.24547291605267674,
+    0.2430687079904601,
+    0.2486425000242889
+   ],
+   "median": 0.24547291605267674,
+   "result": "20",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 2,
+   "seconds": [
+    0.24036579206585884,
+    0.245260791038163,
+    0.25101554102730006
+   ],
+   "median": 0.245260791038163,
+   "result": "40",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 4,
+   "seconds": [
+    0.24644412496127188,
+    0.25545183301437646,
+    0.24618712498340756
+   ],
+   "median": 0.24644412496127188,
+   "result": "80",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 8,
+   "seconds": [
+    0.24549550004303455,
+    0.25482749997172505,
+    0.2495435419259593
+   ],
+   "median": 0.2495435419259593,
+   "result": "160",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 1,
+   "seconds": [
+    0.13830879190936685,
+    0.12045166699681431,
+    0.13667433301452547
+   ],
+   "median": 0.13667433301452547,
+   "result": "4000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 2,
+   "seconds": [
+    0.14588375005405396,
+    0.1449803749565035,
+    0.13946920807939023
+   ],
+   "median": 0.1449803749565035,
+   "result": "4000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 4,
+   "seconds": [
+    0.1386509999865666,
+    0.15111945802345872,
+    0.1358720000134781
+   ],
+   "median": 0.1386509999865666,
+   "result": "4000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 8,
+   "seconds": [
+    0.15424583293497562,
+    0.15790166601072997,
+    0.14360508299432695
+   ],
+   "median": 0.15424583293497562,
+   "result": "4000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 1,
+   "seconds": [
+    0.39887754106894135,
+    0.40688487503211945,
+    0.4292938329745084
+   ],
+   "median": 0.40688487503211945,
+   "result": "2000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 2,
+   "seconds": [
+    0.3975494169862941,
+    0.4274606250692159,
+    0.4120097919367254
+   ],
+   "median": 0.4120097919367254,
+   "result": "2000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 4,
+   "seconds": [
+    0.4130602090153843,
+    0.40634166600648314,
+    0.4088950000004843
+   ],
+   "median": 0.4088950000004843,
+   "result": "2000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 8,
+   "seconds": [
+    0.4075127079850063,
+    0.395282750017941,
+    0.3990288330242038
+   ],
+   "median": 0.3990288330242038,
+   "result": "2000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 1,
+   "seconds": [
+    0.37108304200228304,
+    0.33429195801727474,
+    0.33755987498443574
+   ],
+   "median": 0.33755987498443574,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 2,
+   "seconds": [
+    0.2466118329903111,
+    0.2571127499686554,
+    0.248974125017412
+   ],
+   "median": 0.248974125017412,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 4,
+   "seconds": [
+    0.2003048750339076,
+    0.21714854205492884,
+    0.18081537494435906
+   ],
+   "median": 0.2003048750339076,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 8,
+   "seconds": [
+    0.16060004197061062,
+    0.1712908330373466,
+    0.16840025002602488
+   ],
+   "median": 0.16840025002602488,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 1,
+   "seconds": [
+    0.254596707993187,
+    0.279537208029069,
+    0.2658989999908954
+   ],
+   "median": 0.2658989999908954,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 2,
+   "seconds": [
+    0.2730236250208691,
+    0.2668793329503387,
+    0.2592819998972118
+   ],
+   "median": 0.2668793329503387,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 4,
+   "seconds": [
+    0.27457879192661494,
+    0.28121229098178446,
+    0.2763275840552524
+   ],
+   "median": 0.2763275840552524,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 8,
+   "seconds": [
+    0.2815425000153482,
+    0.2953473749803379,
+    0.28597754205111414
+   ],
+   "median": 0.28597754205111414,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 1,
+   "seconds": [
+    0.3920212920056656,
+    0.3855746249901131,
+    0.4026498340535909
+   ],
+   "median": 0.3920212920056656,
+   "result": "-689.910548323669",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 2,
+   "seconds": [
+    0.39158125000540167,
+    0.4038867090130225,
+    0.4105107500217855
+   ],
+   "median": 0.4038867090130225,
+   "result": "-689.9105483237294",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 4,
+   "seconds": [
+    0.4320025419583544,
+    0.39524816698394716,
+    0.4066752919461578
+   ],
+   "median": 0.4066752919461578,
+   "result": "-689.9105483236685",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 8,
+   "seconds": [
+    0.4233222919283435,
+    0.418497083010152,
+    0.4317154170712456
+   ],
+   "median": 0.4233222919283435,
+   "result": "-689.9105483236644",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 1,
+   "seconds": [
+    0.24380770896095783,
+    0.2513419589959085,
+    0.25152787496335804
+   ],
+   "median": 0.2513419589959085,
+   "result": "20",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 2,
+   "seconds": [
+    0.24941149994265288,
+    0.25434445799328387,
+    0.24705104203894734
+   ],
+   "median": 0.24941149994265288,
+   "result": "40",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 4,
+   "seconds": [
+    0.24393758294172585,
+    0.2469170829281211,
+    0.25570137496106327
+   ],
+   "median": 0.2469170829281211,
+   "result": "80",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 8,
+   "seconds": [
+    0.24771891604177654,
+    0.24326779204420745,
+    0.2546826669713482
+   ],
+   "median": 0.24771891604177654,
+   "result": "160",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 1,
+   "seconds": [
+    0.2443746660137549,
+    0.23691733297891915,
+    0.25047937501221895
+   ],
+   "median": 0.2443746660137549,
+   "result": "4000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 2,
+   "seconds": [
+    0.22915883408859372,
+    0.23592116602230817,
+    0.243720208061859
+   ],
+   "median": 0.23592116602230817,
+   "result": "4000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 4,
+   "seconds": [
+    0.24873779201880097,
+    0.2617199590895325,
+    0.2597386250272393
+   ],
+   "median": 0.2597386250272393,
+   "result": "4000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 8,
+   "seconds": [
+    0.27687699999660254,
+    0.2635140420170501,
+    0.2894578749546781
+   ],
+   "median": 0.27687699999660254,
+   "result": "4000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 1,
+   "seconds": [
+    0.3704044170444831,
+    0.3603032079990953,
+    0.37230237491894513
+   ],
+   "median": 0.3704044170444831,
+   "result": "2000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 2,
+   "seconds": [
+    0.39967600000090897,
+    0.4030754170380533,
+    0.4206127088982612
+   ],
+   "median": 0.4030754170380533,
+   "result": "2000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 4,
+   "seconds": [
+    0.40013687510509044,
+    0.4052609170321375,
+    0.4135944169247523
+   ],
+   "median": 0.4052609170321375,
+   "result": "2000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 8,
+   "seconds": [
+    0.3746830830350518,
+    0.4029153330484405,
+    0.3888507499359548
+   ],
+   "median": 0.3888507499359548,
+   "result": "2000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 1,
+   "seconds": [
+    0.3626311670523137,
+    0.3406720419880003,
+    0.3717359169386327
+   ],
+   "median": 0.3626311670523137,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 2,
+   "seconds": [
+    0.2548748749541119,
+    0.251957125030458,
+    0.2506192079745233
+   ],
+   "median": 0.251957125030458,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 4,
+   "seconds": [
+    0.19672720797825605,
+    0.20742516603786498,
+    0.19933037494774908
+   ],
+   "median": 0.19933037494774908,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 8,
+   "seconds": [
+    0.1653381660580635,
+    0.20859787508379668,
+    0.219211959047243
+   ],
+   "median": 0.20859787508379668,
+   "result": "25997",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 1,
+   "seconds": [
+    0.26504108298104256,
+    0.267427165992558,
+    0.2550559579394758
+   ],
+   "median": 0.26504108298104256,
+   "result": "25997",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 2,
+   "seconds": [
+    0.1717657500412315,
+    0.17822604207322001,
+    0.18362491705920547
+   ],
+   "median": 0.17822604207322001,
+   "result": "25997",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 4,
+   "seconds": [
+    0.12353370792698115,
+    0.1282295419368893,
+    0.1485873330384493
+   ],
+   "median": 0.1282295419368893,
+   "result": "25997",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "cpu_primes",
+   "category": "cpu",
+   "workers": 8,
+   "seconds": [
+    0.10599679092410952,
+    0.10675495897885412,
+    0.10321016691159457
+   ],
+   "median": 0.10599679092410952,
+   "result": "25997",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 1,
+   "seconds": [
+    0.3856942499987781,
+    0.4010521249147132,
+    0.3855164590058848
+   ],
+   "median": 0.3856942499987781,
+   "result": "-689.910548323669",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 2,
+   "seconds": [
+    0.2736384590389207,
+    0.25479883304797113,
+    0.3071064999094233
+   ],
+   "median": 0.2736384590389207,
+   "result": "-689.9105483237294",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 4,
+   "seconds": [
+    0.16113045800011605,
+    0.17442320799455047,
+    0.1853445420274511
+   ],
+   "median": 0.17442320799455047,
+   "result": "-689.9105483236685",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "cpu_float",
+   "category": "cpu",
+   "workers": 8,
+   "seconds": [
+    0.09592212492134422,
+    0.10787216597236693,
+    0.09475570800714195
+   ],
+   "median": 0.09592212492134422,
+   "result": "-689.9105483236644",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 1,
+   "seconds": [
+    0.23908262501936406,
+    0.23910166695713997,
+    0.23626199993304908
+   ],
+   "median": 0.23908262501936406,
+   "result": "20",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 2,
+   "seconds": [
+    0.24767687497660518,
+    0.25403383397497237,
+    0.24039116699714214
+   ],
+   "median": 0.24767687497660518,
+   "result": "40",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 4,
+   "seconds": [
+    0.24827408301644027,
+    0.252370374975726,
+    0.24614674993790686
+   ],
+   "median": 0.24827408301644027,
+   "result": "80",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "io_sleep",
+   "category": "io",
+   "workers": 8,
+   "seconds": [
+    0.27782466693315655,
+    0.2506713749608025,
+    0.2516565410187468
+   ],
+   "median": 0.2516565410187468,
+   "result": "160",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 1,
+   "seconds": [
+    0.25695187493693084,
+    0.22915108292363584,
+    0.23263675009366125
+   ],
+   "median": 0.23263675009366125,
+   "result": "4000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 2,
+   "seconds": [
+    0.24941341602243483,
+    0.24006420804653317,
+    0.24753654201049358
+   ],
+   "median": 0.24753654201049358,
+   "result": "4000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 4,
+   "seconds": [
+    0.26624408399220556,
+    0.26374795800074935,
+    0.26677520805969834
+   ],
+   "median": 0.26624408399220556,
+   "result": "4000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "contended_list_append",
+   "category": "contended",
+   "workers": 8,
+   "seconds": [
+    0.262972499942407,
+    0.2538536670617759,
+    0.27812187501695007
+   ],
+   "median": 0.262972499942407,
+   "result": "4000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 1,
+   "seconds": [
+    0.36252749990671873,
+    0.3806000829208642,
+    0.3651168330106884
+   ],
+   "median": 0.3651168330106884,
+   "result": "2000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 2,
+   "seconds": [
+    0.4565870420774445,
+    0.4685707079479471,
+    0.4308512919815257
+   ],
+   "median": 0.4565870420774445,
+   "result": "2000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 4,
+   "seconds": [
+    0.49113804195076227,
+    0.48380100005306304,
+    0.5087009170092642
+   ],
+   "median": 0.49113804195076227,
+   "result": "2000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "contended_dict_update",
+   "category": "contended",
+   "workers": 8,
+   "seconds": [
+    0.5010801249882206,
+    0.4783072500722483,
+    0.47970970906317234
+   ],
+   "median": 0.47970970906317234,
+   "result": "2000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 1,
+   "seconds": [
+    0.38390504103153944,
+    0.35451283294241875,
+    0.38792404206469655
+   ],
+   "median": 0.38390504103153944,
+   "result": "25997",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 2,
+   "seconds": [
+    0.27766033296938986,
+    0.30085791600868106,
+    0.275248916936107
+   ],
+   "median": 0.27766033296938986,
+   "result": "25997",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 4,
+   "seconds": [
+    0.2188219999661669,
+    0.1994291669689119,
+    0.2295774999074638
+   ],
+   "median": 0.2188219999661669,
+   "result": "25997",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "mp_primes",
+   "category": "multiprocessing",
+   "workers": 8,
+   "seconds": [
+    0.21450658305548131,
+    0.20678608305752277,
+    0.23517070908565074
+   ],
+   "median": 0.21450658305548131,
+   "result": "25997",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.38871370803099126,
+    0.3429825420025736,
+    0.3369433330371976
+   ],
+   "median": 0.3429825420025736,
+   "result": "10485760000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.37110808305442333,
+    0.3578366250731051,
+    0.35922158404719085
+   ],
+   "median": 0.35922158404719085,
+   "result": "10485760000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.352172291954048,
+    0.36300383298657835,
+    0.3602104999590665
+   ],
+   "median": 0.3602104999590665,
+   "result": "10485760000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.3580062079709023,
+    0.36854729102924466,
+    0.3619455829029903
+   ],
+   "median": 0.3619455829029903,
+   "result": "10485760000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.14834750001318753,
+    0.1564027500571683,
+    0.15041241701692343
+   ],
+   "median": 0.15041241701692343,
+   "result": "4196687.959283799",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.10615266708191484,
+    0.10430870798882097,
+    0.1073146250564605
+   ],
+   "median": 0.10615266708191484,
+   "result": "4196687.959283799",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.08164383401162922,
+    0.08614058396779001,
+    0.07931825006380677
+   ],
+   "median": 0.08164383401162922,
+   "result": "4196687.959283799",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.06338808301370591,
+    0.06847362499684095,
+    0.06604158296249807
+   ],
+   "median": 0.06604158296249807,
+   "result": "4196687.959283799",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.16994599997997284,
+    0.1662683340255171,
+    0.16185987496282905
+   ],
+   "median": 0.1662683340255171,
+   "result": "7991361578",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.09922970808111131,
+    0.09229933307506144,
+    0.09871183300856501
+   ],
+   "median": 0.09871183300856501,
+   "result": "7991361578",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.05627895810175687,
+    0.06957166607026011,
+    0.05832558299880475
+   ],
+   "median": 0.05832558299880475,
+   "result": "7991361578",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.048395083053037524,
+    0.03427266702055931,
+    0.0386867499910295
+   ],
+   "median": 0.0386867499910295,
+   "result": "7991361578",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.23870983300730586,
+    0.23660816601477563,
+    0.24959308304823935
+   ],
+   "median": 0.23870983300730586,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.13889187504537404,
+    0.13868674996774644,
+    0.13802083290647715
+   ],
+   "median": 0.13868674996774644,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.07493008289020509,
+    0.07387045898940414,
+    0.08163954096380621
+   ],
+   "median": 0.07493008289020509,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.041488457936793566,
+    0.05813562497496605,
+    0.04126012499909848
+   ],
+   "median": 0.041488457936793566,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    1.7465193750103936,
+    1.6215189999202266,
+    1.7387915840372443
+   ],
+   "median": 1.7387915840372443,
+   "result": "788",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.8189023330342025,
+    0.7998859590152279,
+    0.8217112920247018
+   ],
+   "median": 0.8189023330342025,
+   "result": "788",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.44259324995800853,
+    0.46169416699558496,
+    0.4447499579982832
+   ],
+   "median": 0.4447499579982832,
+   "result": "788",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.3299866250017658,
+    0.307641249964945,
+    0.2731800419278443
+   ],
+   "median": 0.307641249964945,
+   "result": "788",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.42615416599437594,
+    0.40315516700502485,
+    0.4567901249974966
+   ],
+   "median": 0.42615416599437594,
+   "result": "32",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.3884386250283569,
+    0.39060312509536743,
+    0.417347582988441
+   ],
+   "median": 0.39060312509536743,
+   "result": "32",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.3813835419714451,
+    0.3619046250823885,
+    0.353302999981679
+   ],
+   "median": 0.3619046250823885,
+   "result": "32",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.36787987500429153,
+    0.36278141604270786,
+    0.3535545419435948
+   ],
+   "median": 0.36278141604270786,
+   "result": "32",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.11636783299036324,
+    0.22411883296445012,
+    0.146629250026308
+   ],
+   "median": 0.146629250026308,
+   "result": "400",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.13031758402939886,
+    0.11326816701330245,
+    0.11017345800064504
+   ],
+   "median": 0.11326816701330245,
+   "result": "400",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.0887694590492174,
+    0.09132595907431096,
+    0.08224287501070648
+   ],
+   "median": 0.0887694590492174,
+   "result": "400",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.12",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.09337358293123543,
+    0.0892658750526607,
+    0.09546737500932068
+   ],
+   "median": 0.09337358293123543,
+   "result": "400",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.3567262919386849,
+    0.3808853339869529,
+    0.39662129106000066
+   ],
+   "median": 0.3808853339869529,
+   "result": "10485760000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.40156341600231826,
+    0.3993329160148278,
+    0.4079060830408707
+   ],
+   "median": 0.40156341600231826,
+   "result": "10485760000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.41748149995692074,
+    0.41340737498831004,
+    0.40412100008688867
+   ],
+   "median": 0.41340737498831004,
+   "result": "10485760000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.38224549998994917,
+    0.40251741698011756,
+    0.40879695804324
+   ],
+   "median": 0.40251741698011756,
+   "result": "10485760000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.14942491694819182,
+    0.1410090000135824,
+    0.16049162507988513
+   ],
+   "median": 0.14942491694819182,
+   "result": "4196687.959283799",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.11509295809082687,
+    0.09741737507283688,
+    0.11073337506968528
+   ],
+   "median": 0.11073337506968528,
+   "result": "4196687.959283799",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.08368600008543581,
+    0.09504591603763402,
+    0.08663183299358934
+   ],
+   "median": 0.08663183299358934,
+   "result": "4196687.959283799",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.06882783304899931,
+    0.08474337495863438,
+    0.08786058297846466
+   ],
+   "median": 0.08474337495863438,
+   "result": "4196687.959283799",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.17079608398489654,
+    0.18344658392015845,
+    0.17356295802164823
+   ],
+   "median": 0.17356295802164823,
+   "result": "7991361578",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.10340733302291483,
+    0.10434470803011209,
+    0.09793612500652671
+   ],
+   "median": 0.10340733302291483,
+   "result": "7991361578",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.09126554103568196,
+    0.06801804201677442,
+    0.08647637499962002
+   ],
+   "median": 0.08647637499962002,
+   "result": "7991361578",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.07187208300456405,
+    0.06012475001625717,
+    0.05795508297160268
+   ],
+   "median": 0.06012475001625717,
+   "result": "7991361578",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.22903354198206216,
+    0.22939670796040446,
+    0.23965308291371912
+   ],
+   "median": 0.22939670796040446,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.14089708402752876,
+    0.12971512496005744,
+    0.1328593329526484
+   ],
+   "median": 0.1328593329526484,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.0853500000666827,
+    0.07661141699645668,
+    0.08134987496305257
+   ],
+   "median": 0.08134987496305257,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.04106187494471669,
+    0.04996900004334748,
+    0.06459904194343835
+   ],
+   "median": 0.04996900004334748,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    1.451216165907681,
+    1.436788541963324,
+    1.491356415906921
+   ],
+   "median": 1.451216165907681,
+   "result": "788",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.7926695839269087,
+    0.8308504580054432,
+    0.7971218749880791
+   ],
+   "median": 0.7971218749880791,
+   "result": "788",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.48686937510501593,
+    0.4449036670848727,
+    0.47390816698316485
+   ],
+   "median": 0.47390816698316485,
+   "result": "788",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.3205457499716431,
+    0.31716950004920363,
+    0.3555143328849226
+   ],
+   "median": 0.3205457499716431,
+   "result": "788",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.488626875099726,
+    0.4730997500009835,
+    0.4896167499246076
+   ],
+   "median": 0.488626875099726,
+   "result": "32",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.47499804198741913,
+    0.4651793750235811,
+    0.45159491698723286
+   ],
+   "median": 0.4651793750235811,
+   "result": "32",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.45571116590872407,
+    0.4494006250752136,
+    0.44852525007445365
+   ],
+   "median": 0.4494006250752136,
+   "result": "32",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.46837833302561194,
+    0.4460433330386877,
+    0.4342336250701919
+   ],
+   "median": 0.4460433330386877,
+   "result": "32",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.14784024993423373,
+    0.16646724997553974,
+    0.1579139999812469
+   ],
+   "median": 0.1579139999812469,
+   "result": "400",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.08547104196622968,
+    0.11307424993719906,
+    0.0855377500411123
+   ],
+   "median": 0.0855377500411123,
+   "result": "400",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.08755062508862466,
+    0.09108254103921354,
+    0.11448966595344245
+   ],
+   "median": 0.09108254103921354,
+   "result": "400",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14 (GIL on)",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.0902411249699071,
+    0.08935949997976422,
+    0.08079945796635002
+   ],
+   "median": 0.08935949997976422,
+   "result": "400",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.3563102079788223,
+    0.3652278339723125,
+    0.3654321669600904
+   ],
+   "median": 0.3652278339723125,
+   "result": "10485760000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.24243224994279444,
+    0.2609832499874756,
+    0.24733191705308855
+   ],
+   "median": 0.24733191705308855,
+   "result": "10485760000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.1447221669368446,
+    0.12978591595310718,
+    0.12800658296328038
+   ],
+   "median": 0.12978591595310718,
+   "result": "10485760000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "numpy_small_ops",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.10393950005527586,
+    0.07959874998778105,
+    0.07798479101620615
+   ],
+   "median": 0.07959874998778105,
+   "result": "10485760000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.14288687496446073,
+    0.13056991598568857,
+    0.14648129092529416
+   ],
+   "median": 0.14288687496446073,
+   "result": "4196687.959283799",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.0910194159951061,
+    0.10122520895674825,
+    0.10537087498232722
+   ],
+   "median": 0.10122520895674825,
+   "result": "4196687.959283799",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.08458224998321384,
+    0.07338241604156792,
+    0.07978254207409918
+   ],
+   "median": 0.07978254207409918,
+   "result": "4196687.959283799",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "numpy_matmul",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.08554958400782198,
+    0.08033920801244676,
+    0.07958400005009025
+   ],
+   "median": 0.08033920801244676,
+   "result": "4196687.959283799",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.1849229170475155,
+    0.1620294579770416,
+    0.159695666981861
+   ],
+   "median": 0.1620294579770416,
+   "result": "7991361578",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.1056383749237284,
+    0.10814866598229855,
+    0.11501020798459649
+   ],
+   "median": 0.10814866598229855,
+   "result": "7991361578",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.06355333304964006,
+    0.07913012499921024,
+    0.06353579205460846
+   ],
+   "median": 0.06355333304964006,
+   "result": "7991361578",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "pandas_groupby",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.06519274995662272,
+    0.062252167030237615,
+    0.056528542074374855
+   ],
+   "median": 0.062252167030237615,
+   "result": "7991361578",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.23348779208026826,
+    0.2288770000450313,
+    0.2268592920154333
+   ],
+   "median": 0.2288770000450313,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.14760062494315207,
+    0.1337533330079168,
+    0.1444893330335617
+   ],
+   "median": 0.1444893330335617,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.1051648750435561,
+    0.07132854091469198,
+    0.08331745793111622
+   ],
+   "median": 0.08331745793111622,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.059937666985206306,
+    0.04527350002899766,
+    0.05165749997831881
+   ],
+   "median": 0.05165749997831881,
+   "result": "333333233333340000000",
+   "gil_enabled": true,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    1.4691054589347914,
+    1.5262386669637635,
+    1.5597218330949545
+   ],
+   "median": 1.5262386669637635,
+   "result": "788",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.8626539999386296,
+    0.931990290991962,
+    0.8771240829955786
+   ],
+   "median": 0.8771240829955786,
+   "result": "788",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.4672405000310391,
+    0.46126158302649856,
+    0.5134858749806881
+   ],
+   "median": 0.4672405000310391,
+   "result": "788",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "sklearn_fit",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.33592958305962384,
+    0.33687074994668365,
+    0.35922929202206433
+   ],
+   "median": 0.33687074994668365,
+   "result": "788",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.47832379199098796,
+    0.4627344589680433,
+    0.5127281250897795
+   ],
+   "median": 0.47832379199098796,
+   "result": "32",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.3344670409569517,
+    0.3556135840481147,
+    0.33437120902817696
+   ],
+   "median": 0.3344670409569517,
+   "result": "32",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.19758504093624651,
+    0.21317574998829514,
+    0.19645050005055964
+   ],
+   "median": 0.19758504093624651,
+   "result": "32",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "fastapi_sync_cpu",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.13186687498819083,
+    0.12055370805319399,
+    0.1472592499339953
+   ],
+   "median": 0.13186687498819083,
+   "result": "32",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.16481237497646362,
+    0.1725105830701068,
+    0.17102487501688302
+   ],
+   "median": 0.17102487501688302,
+   "result": "400",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.10887145798187703,
+    0.12990933295805007,
+    0.1071425840491429
+   ],
+   "median": 0.10887145798187703,
+   "result": "400",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.08805345802102238,
+    0.08361941704060882,
+    0.07646891695912927
+   ],
+   "median": 0.08361941704060882,
+   "result": "400",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (free-threaded)",
+   "workload": "fastapi_async_json",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.0783106250455603,
+    0.07307166699320078,
+    0.08200304198544472
+   ],
+   "median": 0.0783106250455603,
+   "result": "400",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (PYTHON_GIL=0 forced)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 1,
+   "seconds": [
+    0.22495054197497666,
+    0.21983933309093118,
+    0.22102208388969302
+   ],
+   "median": 0.22102208388969302,
+   "result": "333333233333340000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (PYTHON_GIL=0 forced)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 2,
+   "seconds": [
+    0.14350766700226814,
+    0.12499937496613711,
+    0.12602383294142783
+   ],
+   "median": 0.12602383294142783,
+   "result": "333333233333340000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (PYTHON_GIL=0 forced)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 4,
+   "seconds": [
+    0.07824062509462237,
+    0.06624820793513209,
+    0.06923004100099206
+   ],
+   "median": 0.06923004100099206,
+   "result": "333333233333340000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  },
+  {
+   "config": "3.14t (PYTHON_GIL=0 forced)",
+   "workload": "duckdb_query",
+   "category": "library",
+   "workers": 8,
+   "seconds": [
+    0.07804320799186826,
+    0.07783999992534518,
+    0.04961950005963445
+   ],
+   "median": 0.07783999992534518,
+   "result": "333333233333340000000",
+   "gil_enabled": false,
+   "skipped": null,
+   "error": null
+  }
+ ]
+}

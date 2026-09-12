@@ -1,0 +1,13 @@
+# virtualenvs created by setup.sh
+.venv*/
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# benchmark output (commit results.json / report.html deliberately if you want to share a run)
+results/smoke*.json
+results/smoke_report.html
+# editors / OS
+.DS_Store
+.idea/
+.vscode/
