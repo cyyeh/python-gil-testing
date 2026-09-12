@@ -27,7 +27,7 @@ CATEGORY_TITLES = {
 }
 CATEGORY_BLURB = {
     "cpu": "Pure-bytecode number crunching split across threads. This is the case the GIL serialises: "
-           "expect flat lines on GIL builds and near-linear speed-up on the free-threaded build.",
+           "expect flat lines on GIL builds and genuine parallel speed-up on the free-threaded build.",
     "io": "Threads spend their time waiting. The GIL is released while blocked, so all builds overlap the "
           "waits equally - free-threading was never needed here.",
     "contended": "All threads hammer one shared object. Without the GIL, every operation takes the object's "
@@ -368,7 +368,9 @@ def tip(inner: str, explanation: str, cls: str = "abbr") -> str:
 GIL_FLAG_TIP = ("GIL re-enabled: an extension module imported by this workload has not declared free-threading "
                 "support, so CPython turned the GIL back on for this run. This 'free-threaded' number is "
                 "effectively GIL-on; see the support table.")
-SPEEDUP_TIP = "1-thread median divided by the highest-thread-count median. Above 1 = faster with more threads; 1 = no scaling."
+SPEEDUP_TIP = ("1-thread median divided by the highest-thread-count median. Above 1 = faster with more threads; "
+               "1 = no scaling - except where a workload gives each thread its own fixed work (io_sleep), and 1.0x "
+               "means every thread's work finished in the time one thread's used to take.")
 GIL_AT_RUN_TIP = ("sys._is_gil_enabled() measured inside the benchmark process. It can differ from the build "
                   "default: PYTHON_GIL=1 turns it on, and an extension without free-threading support turns it "
                   "back on at import.")
@@ -622,7 +624,8 @@ thread specialises its own copy. This is what brought single-thread overhead dow
 the "single-threaded overhead" finding above.</li>
 <li>The experimental JIT is not available in the free-threaded build (<code>sys._jit.is_available()</code> is
 <code>False</code> here).</li>
-<li>Thread switching no longer exists as a concept: there is no <code>sys.setswitchinterval</code> hand-off; threads simply run.</li>
+<li>Thread switching no longer exists as a concept. <code>sys.setswitchinterval</code> still exists and still accepts a
+value, but with the GIL off there is no hand-off for it to govern - threads simply run.</li>
 </ul>
 
 <h3>6. Runtime knobs and semantics visible from Python</h3>
@@ -672,8 +675,11 @@ leak into other measurements. Each thread count is timed {doc['repeats']}x (<cod
 <strong>median</strong> is plotted, error bars show the min-max range, and tables give median &plusmn; sample standard
 deviation. Cells whose coefficient of variation exceeds {NOISY_CV:.0%} are marked ~; treat differences smaller than the
 error bars as noise.</li>
-<li>Every workload returns a value that must be identical for every thread count (checked by <code>tests/</code>), so each run
-does the same total work.</li>
+<li>Every workload returns a checksum that <code>tests/</code> pins across thread counts, so splitting the work differently
+cannot change how much of it there is: exactly for the integer checksums, and to six decimal places for
+<code>cpu_float</code>, where float addition is not associative. One deliberate exception: <code>io_sleep</code> gives
+<em>each</em> thread a fixed number of waits, so its total work grows with the thread count - a flat line there means the
+waits overlapped, and its 1.0x "speed-up" is the good outcome, not the absence of one.</li>
 <li>BLAS/OpenMP are pinned to one thread (<code>OPENBLAS_NUM_THREADS=1</code> etc.) so scaling reflects Python threads only.
 Every workload gets one untimed warm-up call first (cold caches, lazy imports, uvicorn start-up).</li>
 <li>Thread counts: {', '.join(map(str, doc['workers']))} on a {html.escape(str(doc['host'].get('ncpu')))}-core

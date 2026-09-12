@@ -186,8 +186,9 @@ WORKLOADS: list[Workload] = [
         "io_sleep",
         "io",
         io_sleep,
-        "Each thread performs 20 x 10ms sleeps (simulated network/disk waits). "
-        "The GIL is released while sleeping, so all builds should overlap waits.",
+        "Each thread performs 20 x 10ms sleeps (simulated network/disk waits), so 8 threads do 8x the waiting "
+        "of 1 - unlike every other workload here, the work is fixed per thread, not in total. The GIL is released "
+        "while sleeping, so all builds should overlap the waits: a flat line (1.0x) is the good outcome here.",
     ),
     Workload(
         "contended_list_append",
