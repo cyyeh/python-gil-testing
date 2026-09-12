@@ -16,7 +16,9 @@ else ("does X support free-threading?", "add / benchmark / compare library X",
 3. add a workload to `bench/lib_workloads.py` if none exists (contract is in the skill)
 4. run the tests on **both** interpreters
 5. `python -m bench.compare_lib <pkg>` (check -> warn -> bench -> merge -> report), 5 repeats by default
-6. report speed-ups per configuration **with ± stdev**, flag `[GIL re-enabled by import]`, link the report
+6. `python -m bench.verify_report` - the page must say what the data says; then re-read its prose
+   against those numbers (hand that read to a subagent if you have one), fix the source, regenerate
+7. report speed-ups per configuration **with ± stdev**, flag `[GIL re-enabled by import]`, link the report
 
 The same file is mirrored at `.claude/skills/gil-lib-compare/SKILL.md` for Claude Code;
 `tests/test_agent_files.py` fails if the two copies differ - edit `.agents/...` and copy.
